@@ -1,16 +1,21 @@
 #include <SFML/Graphics.hpp>
 
-#include "Constants.hpp"
 #include "Camera.hpp"
 #include "Cube.hpp"
 
+constexpr int windowWidth{ 800 };
+constexpr int windowHeight{ 600 };
+
+constexpr float rotationSpeed{ .1f };
+
+constexpr float cubeletSize{ 2.f };
+
 int main()
 {
-    Camera cam{ Constants::windowWidth, Constants::windowHeight };
-    // Cube cube{};
-    RubiksCube cube{ Constants::cubeSize };
+    Cube cube{ cubeletSize };
+    Camera cam{ windowWidth, windowHeight };
 
-    auto window{ sf::RenderWindow(sf::VideoMode({ Constants::windowWidth, Constants::windowHeight}), "Rubik's Cube") };
+    auto window{ sf::RenderWindow(sf::VideoMode({ windowWidth, windowHeight}), "Rubik's Cube") };
 
     while (window.isOpen())
     {
@@ -22,13 +27,26 @@ int main()
             else if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>())
             {
                 if (keyPressed->scancode == sf::Keyboard::Scancode::Up)
-                    cube.rotate(-Constants::rotationSpeed, { 1.f, 0.f, 0.f });
+                    cube.rotate(-rotationSpeed, { 1.f, 0.f, 0.f });
                 else if (keyPressed->scancode == sf::Keyboard::Scancode::Down)
-                    cube.rotate(Constants::rotationSpeed, { 1.f, 0.f, 0.f });
+                    cube.rotate(rotationSpeed, { 1.f, 0.f, 0.f });
                 else if (keyPressed->scancode == sf::Keyboard::Scancode::Left)
-                    cube.rotate(-Constants::rotationSpeed, { 0.f, 1.f, 0.f });
+                    cube.rotate(-rotationSpeed, { 0.f, 1.f, 0.f });
                 else if (keyPressed->scancode == sf::Keyboard::Scancode::Right)
-                    cube.rotate(Constants::rotationSpeed, { 0.f, 1.f, 0.f });
+                    cube.rotate(rotationSpeed, { 0.f, 1.f, 0.f });
+
+                else if (keyPressed->scancode == sf::Keyboard::Scancode::U)
+                    cube.U();
+                else if (keyPressed->scancode == sf::Keyboard::Scancode::D)
+                    cube.D();
+                else if (keyPressed->scancode == sf::Keyboard::Scancode::L)
+                    cube.L();
+                else if (keyPressed->scancode == sf::Keyboard::Scancode::R)
+                    cube.R();
+                else if (keyPressed->scancode == sf::Keyboard::Scancode::F)
+                    cube.F();
+                else if (keyPressed->scancode == sf::Keyboard::Scancode::B)
+                    cube.B();
 
             }
         }
@@ -36,8 +54,7 @@ int main()
 
         window.clear();
 
-        // cam.drawCube(window, cube);
-        cam.drawRubiksCube(window, cube);
+        cam.drawCube(window, cube);
 
         window.display();
     }

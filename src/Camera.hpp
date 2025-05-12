@@ -6,9 +6,7 @@
 
 #include <sfml/Graphics.hpp>
 
-#include "Constants.hpp"
 #include "Cube.hpp"
-#include "RubiksCube.hpp"
 
 class Camera {
     int m_imageWidth{};
@@ -31,70 +29,50 @@ class Camera {
     }
 
 public:
-    Camera(int imageWidth, int imageHeight) : m_imageWidth(imageWidth), m_imageHeight(imageHeight) {
-        viewportWidth = 6.f;
+    Camera(int imageWidth, int imageHeight, float centerZ = 20.f, float viewportZ = 10.f) : m_imageWidth(imageWidth), m_imageHeight(imageHeight) {
+        viewportWidth = 8.f;
         viewportHeight = viewportWidth * static_cast<float>(m_imageHeight) / static_cast<float>(m_imageWidth);
+
+        m_center.z = centerZ;
+        m_viewPortCenter.z = viewportZ;
     }
 
     void drawCube(sf::RenderWindow& win, const Cube& cube) const {
-        // TODO: Rewrite to use normals
-
-        std::array<int, 6> faces{ 0, 1, 2, 3, 4, 5 };
-
-        const auto& vertices{ cube.vertices() };
-        const auto& faceVertexData{ cube.faceVertexData };
-        std::sort(faces.begin(), faces.end(), [&vertices, &faceVertexData](int a, int b) {
-            const auto& aVertices{ faceVertexData[a] };
-            const auto& bVertices{ faceVertexData[b] };
-
-            float aCenterZ{ 0.f };
-            float bCenterZ{ 0.f };
-
-            for (const auto& vertex : aVertices) {
-                aCenterZ += vertices[vertex].z;
-            }
-            for (const auto& vertex : bVertices) {
-                bCenterZ += vertices[vertex].z;
-            }
-
-            return aCenterZ < bCenterZ;
+        std::array<int, 6> faceOrder{ 0, 1, 2, 3, 4, 5 };
+        std::sort(faceOrder.begin(), faceOrder.end(), [&cube](int a, int b) {
+            return cube.getFaceNormal(a).dot({ 0.f, 0.f, -1.f }) > cube.getFaceNormal(b).dot({ 0.f, 0.f, -1.f });
             });
 
-        for (const auto& face : faces) {
-            const auto& vertices{ cube.faceVertexData[face] };
-            const auto& color{ cube.faceColors()[face] };
+        for (const int& i : faceOrder) {
+            if (cube.getFaceNormal(i).dot({ 0.f, 0.f, -1.f }) > 0.f) continue;
 
-            sf::ConvexShape quad, quad2;
-            quad.setPointCount(4);
-            quad.setFillColor(color);
+            const auto& vertexData{ Cube::faceVertexData[i] };
+            const auto& vertices{ cube.getVertices() };
 
+            sf::Vector3f x{ (vertices[vertexData[1]] - vertices[vertexData[0]]) / static_cast<float>(numSides) };
+            sf::Vector3f y{ (vertices[vertexData[3]] - vertices[vertexData[0]]) / static_cast<float>(numSides) };
 
-            for (int i = 0; i < 4; ++i) {
-                const auto& vertex{ vertices[i] };
-                const auto& screenPoint{ viewportToScreen(pointOnViewport(cube.vertices()[vertex])) };
+            for (int j = 0; j < numSides; j++) {
+                for (int k = 0; k < numSides; k++) {
+                    sf::ConvexShape face;
+                    face.setPointCount(4);
+                    face.setFillColor(cube.getFaceColors()[i][j][k]);
 
-                quad.setPoint(i, screenPoint);
-            }
+                    face.setPoint(0, viewportToScreen(pointOnViewport(vertices[vertexData[0]] + (y * static_cast<float>(j)) + (x * static_cast<float>(k)))));
+                    face.setPoint(1, viewportToScreen(pointOnViewport(vertices[vertexData[0]] + (y * static_cast<float>(j)) + (x * static_cast<float>(k + 1)))));
+                    face.setPoint(2, viewportToScreen(pointOnViewport(vertices[vertexData[0]] + (y * static_cast<float>(j + 1)) + (x * static_cast<float>(k + 1)))));
+                    face.setPoint(3, viewportToScreen(pointOnViewport(vertices[vertexData[0]] + (y * static_cast<float>(j + 1)) + (x * static_cast<float>(k)))));
 
-            win.draw(quad);
-        }
-    }
+                    face.setOutlineColor(sf::Color::Black);
+                    face.setOutlineThickness(-2.f);
 
-    void drawRubiksCube(sf::RenderWindow& win, RubiksCube& rubiksCube) const {
-        std::array<Cube, Constants::numSides* Constants::numSides* Constants::numSides> cubes{};
-        int index{ 0 };
-        for (int i = 0; i < Constants::numSides; i++) {
-            for (int j = 0; j < Constants::numSides; j++) {
-                for (int k = 0; k < Constants::numSides; k++) {
-                    cubes[index++] = rubiksCube.cubes()[i][j][k];
+                    win.draw(face);
                 }
             }
         }
-        std::sort(cubes.begin(), cubes.end(), [](const Cube& a, const Cube& b) {
-            return a.vertices()[0].z < b.vertices()[0].z;
-            });
-        for (const auto& cube : cubes) {
-            drawCube(win, cube);
-        }
+
     }
+
+
+
 };
