@@ -6,7 +6,7 @@
 constexpr int windowWidth{ 800 };
 constexpr int windowHeight{ 600 };
 
-constexpr float rotationSpeed{ .1f };
+constexpr float rotationSpeed{ .07f };
 
 constexpr float cubeletSize{ 2.f };
 
@@ -15,7 +15,10 @@ int main()
     Cube cube{ cubeletSize };
     Camera cam{ windowWidth, windowHeight };
 
-    auto window{ sf::RenderWindow(sf::VideoMode({ windowWidth, windowHeight}), "Rubik's Cube") };
+
+    sf::ContextSettings settings;
+    settings.antiAliasingLevel = 8;
+    auto window{ sf::RenderWindow(sf::VideoMode({ windowWidth, windowHeight}), "Rubik's Cube", sf::Style::Default, sf::State::Windowed, settings) };
 
     while (window.isOpen())
     {

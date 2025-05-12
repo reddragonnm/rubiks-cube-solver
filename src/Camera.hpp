@@ -49,8 +49,10 @@ public:
             const auto& vertexData{ Cube::faceVertexData[i] };
             const auto& vertices{ cube.getVertices() };
 
-            sf::Vector3f x{ (vertices[vertexData[1]] - vertices[vertexData[0]]) / static_cast<float>(numSides) };
-            sf::Vector3f y{ (vertices[vertexData[3]] - vertices[vertexData[0]]) / static_cast<float>(numSides) };
+            sf::Vector3f v0{ vertices[vertexData[0]] };
+
+            sf::Vector3f x{ (vertices[vertexData[1]] - v0) / static_cast<float>(numSides) };
+            sf::Vector3f y{ (vertices[vertexData[3]] - v0) / static_cast<float>(numSides) };
 
             for (int j = 0; j < numSides; j++) {
                 for (int k = 0; k < numSides; k++) {
@@ -58,10 +60,12 @@ public:
                     face.setPointCount(4);
                     face.setFillColor(cube.getFaceColors()[i][j][k]);
 
-                    face.setPoint(0, viewportToScreen(pointOnViewport(vertices[vertexData[0]] + (y * static_cast<float>(j)) + (x * static_cast<float>(k)))));
-                    face.setPoint(1, viewportToScreen(pointOnViewport(vertices[vertexData[0]] + (y * static_cast<float>(j)) + (x * static_cast<float>(k + 1)))));
-                    face.setPoint(2, viewportToScreen(pointOnViewport(vertices[vertexData[0]] + (y * static_cast<float>(j + 1)) + (x * static_cast<float>(k + 1)))));
-                    face.setPoint(3, viewportToScreen(pointOnViewport(vertices[vertexData[0]] + (y * static_cast<float>(j + 1)) + (x * static_cast<float>(k)))));
+                    sf::Vector3 base{ v0 + (y * static_cast<float>(j)) + (x * static_cast<float>(k)) };
+
+                    face.setPoint(0, viewportToScreen(pointOnViewport(base)));
+                    face.setPoint(1, viewportToScreen(pointOnViewport(base + x)));
+                    face.setPoint(2, viewportToScreen(pointOnViewport(base + x + y)));
+                    face.setPoint(3, viewportToScreen(pointOnViewport(base + y)));
 
                     face.setOutlineColor(sf::Color::Black);
                     face.setOutlineThickness(-2.f);
