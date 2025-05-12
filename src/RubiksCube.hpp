@@ -1,9 +1,10 @@
 #pragma once
 
+#include <cmath>
+
 #include <sfml/Graphics.hpp>
 
 #include "Constants.hpp"
-#include "VectorRotation.hpp"
 #include "Cube.hpp"
 
 using CubeData = std::array<std::array<std::array<Cube, Constants::numSides>, Constants::numSides>, Constants::numSides>;
@@ -57,7 +58,21 @@ public:
         for (auto& cubeLayer : m_cubes) {
             for (auto& cubeRow : cubeLayer) {
                 for (auto& cube : cubeRow) {
-                    cube.rotate(angle, axis, sf::Vector3f{ 0.f, 0.f, 0.f });
+                    cube.rotate(angle, axis);
+                }
+            }
+        }
+        // setCubePositions();
+
+        float offset{ (Constants::numSides - 1) / 2.f };
+        for (int i = 0; i < Constants::numSides; i++) {
+            for (int j = 0; j < Constants::numSides; j++) {
+                for (int k = 0; k < Constants::numSides; k++) {
+                    m_cubes[i][j][k].setPosition(
+                        m_cubeSize * ((i - offset) * m_i +
+                            (j - offset) * m_j +
+                            (k - offset) * m_k)
+                    );
                 }
             }
         }

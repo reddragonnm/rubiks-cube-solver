@@ -4,8 +4,6 @@
 #include <optional>
 #include <iostream>
 
-#include "VectorRotation.hpp"
-
 #include <sfml/Graphics.hpp>
 
 class Cube {
@@ -65,6 +63,14 @@ public:
         return m_vertices;
     }
 
+    const sf::Vector3f& position() const {
+        return m_position;
+    }
+
+    void setPosition(sf::Vector3f pos) {
+        m_position = pos;
+    }
+
     Cube(sf::Vector3f position = { 0.0, 0.0, 0.0 }, float size = 5.f)
         : m_position(position), m_size(size) {
         updateVertexPositions();
@@ -90,7 +96,6 @@ public:
             sf::Vector3f vec{ (axis.normalized() * angle).cross(m_position - center.value()) };
 
             m_position += center.value() + vec;
-
             if (length > 0.f)
                 m_position = center.value() + (m_position - center.value()).normalized() * length;
         }

@@ -64,10 +64,7 @@ public:
             const auto& vertices{ cube.faceVertexData[face] };
             const auto& color{ cube.faceColors()[face] };
 
-            if (color == sf::Color::Transparent)
-                continue;
-
-            sf::ConvexShape quad;
+            sf::ConvexShape quad, quad2;
             quad.setPointCount(4);
             quad.setFillColor(color);
 
