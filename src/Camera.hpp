@@ -75,10 +75,10 @@ class Camera {
                     face.setPoint(2, viewportToScreen(pointOnViewport(base + x + y)));
                     face.setPoint(3, viewportToScreen(pointOnViewport(base + y)));
 
-                    // if (getConvexShapeArea(face) > 0.5f) {
-                    //     face.setOutlineColor(sf::Color::Black);
-                    //     face.setOutlineThickness(1.f);
-                    // }
+                    if (getConvexShapeArea(face) > 10.f) {
+                        face.setOutlineColor(sf::Color::Black);
+                        face.setOutlineThickness(-1.5f);
+                    }
 
                     win.draw(face);
                 }

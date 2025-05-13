@@ -7,7 +7,7 @@ constexpr int windowWidth{ 800 };
 constexpr int windowHeight{ 600 };
 
 constexpr float rotationSpeed{ .13f };
-constexpr float faceRotationSpeed{ 300.f };
+constexpr float faceRotationSpeed{ 500.f };
 constexpr float cubeletSize{ 2.f };
 
 int main()
@@ -53,6 +53,8 @@ int main()
                 else if (keyPressed->scancode == sf::Keyboard::Scancode::B)
                     cube.startRotation('B');
 
+                else if (keyPressed->scancode == sf::Keyboard::Scancode::Space)
+                    cube.shuffle(100);
             }
         }
 

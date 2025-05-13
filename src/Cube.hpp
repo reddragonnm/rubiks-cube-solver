@@ -125,8 +125,94 @@ private:
         }
     }
 
+    void newRotation(char rotationType) {
+        m_state = ROTATING;
+
+        m_renderCubes[0] = RenderCube{ m_cubeletSize, m_i, m_j, m_k };
+        m_renderCubes[1] = RenderCube{ m_cubeletSize, m_i, m_j, m_k };
+
+        m_renderCubes[0].faceColors = faceColors;
+        m_renderCubes[1].setFaceColorEmpty();
+
+        auto& a{ m_renderCubes[0].faceColors };
+        auto& b{ m_renderCubes[1].faceColors };
+
+        if (rotationType == 'U') {
+            m_rotationAxis = -getFaceNormal(4);
+            std::swap(a[4], b[4]);
+
+            for (int i = 0; i < numSides; i++) {
+                for (int j = 0; j <= 3; j++) {
+                    std::swap(a[j][0][i], b[j][0][i]);
+                }
+            }
+        }
+        else if (rotationType == 'D') {
+            m_rotationAxis = -getFaceNormal(5);
+            std::swap(a[5], b[5]);
+
+            for (int i = 0; i < numSides; i++) {
+                for (int j = 0; j <= 3; j++) {
+                    std::swap(a[j][numSides - 1][i], b[j][numSides - 1][i]);
+                }
+            }
+        }
+        else if (rotationType == 'L') {
+            m_rotationAxis = -getFaceNormal(3);
+            std::swap(a[3], b[3]);
+
+            for (int i = 0; i < numSides; i++) {
+                for (int j : {0, 4, 5}) {
+                    std::swap(a[j][i][0], b[j][i][0]);
+                }
+                std::swap(a[2][i][numSides - 1], b[2][i][numSides - 1]);
+            }
+        }
+        else if (rotationType == 'R') {
+            m_rotationAxis = -getFaceNormal(1);
+            std::swap(a[1], b[1]);
+
+            for (int i = 0; i < numSides; i++) {
+                for (int j : {0, 4, 5}) {
+                    std::swap(a[j][i][numSides - 1], b[j][i][numSides - 1]);
+                }
+                std::swap(a[2][i][0], b[2][i][0]);
+            }
+        }
+        else if (rotationType == 'F') {
+            m_rotationAxis = -getFaceNormal(0);
+            std::swap(a[0], b[0]);
+
+            for (int i = 0; i < numSides; i++) {
+                std::swap(a[4][numSides - 1][i], b[4][numSides - 1][i]);
+                std::swap(a[1][i][0], b[1][i][0]);
+                std::swap(a[5][0][i], b[5][0][i]);
+                std::swap(a[3][i][numSides - 1], b[3][i][numSides - 1]);
+            }
+        }
+        else if (rotationType == 'B') {
+            m_rotationAxis = -getFaceNormal(2);
+            std::swap(a[2], b[2]);
+
+            for (int i = 0; i < numSides; i++) {
+                std::swap(a[4][0][i], b[4][0][i]);
+                std::swap(a[1][i][numSides - 1], b[1][i][numSides - 1]);
+                std::swap(a[5][numSides - 1][i], b[5][numSides - 1][i]);
+                std::swap(a[3][i][0], b[3][i][0]);
+            }
+
+        }
+    }
+
+
 public:
     Cube(float cubeletSize) : RenderCube{ cubeletSize } {}
+
+    void shuffle(int numberOfRotations) {
+        for (int i = 0; i < numberOfRotations; i++) {
+            startRotation("UDFBLR"[rand() % 6]);
+        }
+    }
 
     const std::array<RenderCube, 2>& getRenderCubes() const {
         return m_renderCubes;
@@ -136,86 +222,11 @@ public:
         return m_state;
     }
 
-    void startRotation(char rotationType) {
-        m_rotationQueue.push_back(rotationType);
+    void startRotation(char type) {
+        m_rotationQueue.push_back(type);
 
         if (m_state == IDLE) {
-            m_state = ROTATING;
-
-            m_renderCubes[0] = RenderCube{ m_cubeletSize, m_i, m_j, m_k };
-            m_renderCubes[1] = RenderCube{ m_cubeletSize, m_i, m_j, m_k };
-
-            m_renderCubes[0].faceColors = faceColors;
-            m_renderCubes[1].setFaceColorEmpty();
-
-            auto& a{ m_renderCubes[0].faceColors };
-            auto& b{ m_renderCubes[1].faceColors };
-
-            if (rotationType == 'U') {
-                m_rotationAxis = -getFaceNormal(4);
-                std::swap(a[4], b[4]);
-
-                for (int i = 0; i < numSides; i++) {
-                    for (int j = 0; j <= 3; j++) {
-                        std::swap(a[j][0][i], b[j][0][i]);
-                    }
-                }
-            }
-            else if (rotationType == 'D') {
-                m_rotationAxis = -getFaceNormal(5);
-                std::swap(a[5], b[5]);
-
-                for (int i = 0; i < numSides; i++) {
-                    for (int j = 0; j <= 3; j++) {
-                        std::swap(a[j][numSides - 1][i], b[j][numSides - 1][i]);
-                    }
-                }
-            }
-            else if (rotationType == 'L') {
-                m_rotationAxis = -getFaceNormal(3);
-                std::swap(a[3], b[3]);
-
-                for (int i = 0; i < numSides; i++) {
-                    for (int j : {0, 4, 5}) {
-                        std::swap(a[j][i][0], b[j][i][0]);
-                    }
-                    std::swap(a[2][i][numSides - 1], b[2][i][numSides - 1]);
-                }
-            }
-            else if (rotationType == 'R') {
-                m_rotationAxis = -getFaceNormal(1);
-                std::swap(a[1], b[1]);
-
-                for (int i = 0; i < numSides; i++) {
-                    for (int j : {0, 4, 5}) {
-                        std::swap(a[j][i][numSides - 1], b[j][i][numSides - 1]);
-                    }
-                    std::swap(a[2][i][0], b[2][i][0]);
-                }
-            }
-            else if (rotationType == 'F') {
-                m_rotationAxis = -getFaceNormal(0);
-                std::swap(a[0], b[0]);
-
-                for (int i = 0; i < numSides; i++) {
-                    std::swap(a[4][numSides - 1][i], b[4][numSides - 1][i]);
-                    std::swap(a[1][i][0], b[1][i][0]);
-                    std::swap(a[5][0][i], b[5][0][i]);
-                    std::swap(a[3][i][numSides - 1], b[3][i][numSides - 1]);
-                }
-            }
-            else if (rotationType == 'B') {
-                m_rotationAxis = -getFaceNormal(2);
-                std::swap(a[2], b[2]);
-
-                for (int i = 0; i < numSides; i++) {
-                    std::swap(a[4][0][i], b[4][0][i]);
-                    std::swap(a[1][i][numSides - 1], b[1][i][numSides - 1]);
-                    std::swap(a[5][numSides - 1][i], b[5][numSides - 1][i]);
-                    std::swap(a[3][i][0], b[3][i][0]);
-                }
-
-            }
+            newRotation(type);
         }
     }
 
@@ -244,7 +255,9 @@ public:
                 if (m_rotationQueue.empty()) {
                     m_state = IDLE;
                 }
-
+                else {
+                    newRotation(m_rotationQueue.front());
+                }
             }
         }
     }
