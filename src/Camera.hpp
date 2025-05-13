@@ -1,7 +1,6 @@
 #pragma once
 
 #include <array>
-#include <iostream>
 #include <algorithm>
 
 #include <sfml/Graphics.hpp>
@@ -27,6 +26,20 @@ class Camera {
     sf::Vector2f viewportToScreen(const sf::Vector2f& v) const {
         return sf::Vector2f{ ((v.x / viewportWidth) + 0.5f) * m_imageWidth,
                              ((-v.y / viewportHeight) + 0.5f) * m_imageHeight };
+    }
+
+    float getConvexShapeArea(const sf::ConvexShape& shape) const {
+        size_t pointCount{ shape.getPointCount() };
+        float area{ 0.0f };
+
+        for (size_t i = 0; i < pointCount; ++i) {
+            sf::Vector2f p1{ shape.getPoint(i) };
+            sf::Vector2f p2{ shape.getPoint((i + 1) % pointCount) };
+
+            area += (p1.x * p2.y - p2.x * p1.y);
+        }
+
+        return std::abs(area) * 0.5f;
     }
 
     void drawCube(sf::RenderWindow& win, const RenderCube& cube) const {
@@ -62,8 +75,10 @@ class Camera {
                     face.setPoint(2, viewportToScreen(pointOnViewport(base + x + y)));
                     face.setPoint(3, viewportToScreen(pointOnViewport(base + y)));
 
-                    face.setOutlineColor(sf::Color::Black);
-                    face.setOutlineThickness(-2.f);
+                    // if (getConvexShapeArea(face) > 0.5f) {
+                    //     face.setOutlineColor(sf::Color::Black);
+                    //     face.setOutlineThickness(1.f);
+                    // }
 
                     win.draw(face);
                 }

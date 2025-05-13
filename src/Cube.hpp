@@ -1,8 +1,10 @@
 #pragma once
 
 #include <array>
+#include <vector>
 #include <cassert>
 #include <cmath>
+#include <iostream>
 
 #include "RenderCube.hpp"
 
@@ -18,7 +20,7 @@ public:
 private:
     State m_state{ IDLE };
     float m_rotationAngle{ 0.f };
-    char m_rotationType{ ' ' };
+    std::vector<char> m_rotationQueue{};
     std::array<RenderCube, 2> m_renderCubes{};
     sf::Vector3f m_rotationAxis{};
 
@@ -68,12 +70,12 @@ private:
             rotateFace(3);
 
             for (int i = 0; i < numSides; i++) {
-                sf::Color last{ faceColors[2][i][numSides - 1] };
+                sf::Color last{ faceColors[2][numSides - i - 1][numSides - 1] };
 
                 for (int j : { 4, 0, 5 }) {
                     std::swap(last, faceColors[j][i][0]);
                 }
-                std::swap(last, faceColors[2][i][numSides - 1]);
+                std::swap(last, faceColors[2][numSides - i - 1][numSides - 1]);
             }
         }
     }
@@ -83,12 +85,12 @@ private:
             rotateFace(1);
 
             for (int i = 0; i < numSides; i++) {
-                sf::Color last{ faceColors[2][i][0] };
+                sf::Color last{ faceColors[2][numSides - i - 1][0] };
 
                 for (int j : { 5, 0, 4 }) {
                     std::swap(last, faceColors[j][i][numSides - 1]);
                 }
-                std::swap(last, faceColors[2][i][0]);
+                std::swap(last, faceColors[2][numSides - i - 1][0]);
             }
         }
     }
@@ -110,7 +112,7 @@ private:
 
     void B(bool clockwise = true) {
         for (int t = 0; t < (clockwise ? 1 : 3); t++) {
-            rotateFace(0);
+            rotateFace(2);
 
             for (int i = 0; i < numSides; i++) {
                 sf::Color last{ faceColors[4][0][i] };
@@ -135,9 +137,10 @@ public:
     }
 
     void startRotation(char rotationType) {
+        m_rotationQueue.push_back(rotationType);
+
         if (m_state == IDLE) {
             m_state = ROTATING;
-            m_rotationType = rotationType;
 
             m_renderCubes[0] = RenderCube{ m_cubeletSize, m_i, m_j, m_k };
             m_renderCubes[1] = RenderCube{ m_cubeletSize, m_i, m_j, m_k };
@@ -223,9 +226,8 @@ public:
 
             if (m_rotationAngle >= 90.f) {
                 m_rotationAngle = 0.f;
-                m_state = IDLE;
 
-                switch (m_rotationType) {
+                switch (m_rotationQueue.front()) {
                 case 'U': U(); break;
                 case 'D': D(); break;
                 case 'L': L(); break;
@@ -233,9 +235,16 @@ public:
                 case 'F': F(); break;
                 case 'B': B(); break;
                 default:
-                    std::cerr << "Invalid rotation type: " << m_rotationType << std::endl;
+                    std::cerr << "Invalid rotation type: " << m_rotationQueue.front() << std::endl;
                     break;
                 }
+
+                m_rotationQueue.erase(m_rotationQueue.begin());
+
+                if (m_rotationQueue.empty()) {
+                    m_state = IDLE;
+                }
+
             }
         }
     }

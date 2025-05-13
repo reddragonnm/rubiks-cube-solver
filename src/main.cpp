@@ -6,8 +6,8 @@
 constexpr int windowWidth{ 800 };
 constexpr int windowHeight{ 600 };
 
-constexpr float rotationSpeed{ .07f };
-constexpr float faceRotationSpeed{ 1.f };
+constexpr float rotationSpeed{ .13f };
+constexpr float faceRotationSpeed{ 300.f };
 constexpr float cubeletSize{ 2.f };
 
 int main()
@@ -18,6 +18,9 @@ int main()
     sf::ContextSettings settings;
     settings.antiAliasingLevel = 8;
     auto window{ sf::RenderWindow(sf::VideoMode({ windowWidth, windowHeight}), "Rubik's Cube", sf::Style::Default, sf::State::Windowed, settings) };
+
+    static sf::Clock clock;
+    static float frameTime{ 0.f };
 
     while (window.isOpen())
     {
@@ -55,7 +58,9 @@ int main()
 
         window.clear();
 
-        cube.manageRotation(faceRotationSpeed);
+        frameTime = clock.restart().asSeconds();
+
+        cube.manageRotation(faceRotationSpeed * frameTime);
         cam.draw(window, cube);
 
         window.display();
