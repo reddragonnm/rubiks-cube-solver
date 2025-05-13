@@ -124,9 +124,7 @@ private:
     }
 
 public:
-    Cube(float cubeletSize) : RenderCube{ cubeletSize } {
-
-    }
+    Cube(float cubeletSize) : RenderCube{ cubeletSize } {}
 
     const std::array<RenderCube, 2>& getRenderCubes() const {
         return m_renderCubes;
@@ -222,7 +220,6 @@ public:
         if (m_state == ROTATING) {
             m_rotationAngle += rotationSpeed;
             m_renderCubes[1].rotate(rotationSpeed * (M_PI / 180.f), m_rotationAxis);
-
 
             if (m_rotationAngle >= 90.f) {
                 m_rotationAngle = 0.f;

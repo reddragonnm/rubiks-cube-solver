@@ -119,14 +119,6 @@ public:
         }
     }
 
-    const sf::Vector3f& getBasis(int n) const {
-        assert(n >= 0 && n < 3 && "Basis index out of range");
-
-        if (n == 0) return m_i;
-        else if (n == 1) return m_j;
-        else if (n == 2) return m_k;
-    }
-
     const Vertices& getVertices() const {
         return m_vertices;
     }

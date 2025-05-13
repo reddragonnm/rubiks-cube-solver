@@ -7,14 +7,13 @@ constexpr int windowWidth{ 800 };
 constexpr int windowHeight{ 600 };
 
 constexpr float rotationSpeed{ .07f };
-
+constexpr float faceRotationSpeed{ 1.f };
 constexpr float cubeletSize{ 2.f };
 
 int main()
 {
     Cube cube{ cubeletSize };
     Camera cam{ windowWidth, windowHeight };
-
 
     sf::ContextSettings settings;
     settings.antiAliasingLevel = 8;
@@ -54,10 +53,9 @@ int main()
             }
         }
 
-
         window.clear();
 
-        cube.manageRotation(1.f);
+        cube.manageRotation(faceRotationSpeed);
         cam.draw(window, cube);
 
         window.display();
