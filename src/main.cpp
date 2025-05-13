@@ -39,17 +39,17 @@ int main()
                     cube.rotate(rotationSpeed, { 0.f, 1.f, 0.f });
 
                 else if (keyPressed->scancode == sf::Keyboard::Scancode::U)
-                    cube.U();
+                    cube.startRotation('U');
                 else if (keyPressed->scancode == sf::Keyboard::Scancode::D)
-                    cube.D();
+                    cube.startRotation('D');
                 else if (keyPressed->scancode == sf::Keyboard::Scancode::L)
-                    cube.L();
+                    cube.startRotation('L');
                 else if (keyPressed->scancode == sf::Keyboard::Scancode::R)
-                    cube.R();
+                    cube.startRotation('R');
                 else if (keyPressed->scancode == sf::Keyboard::Scancode::F)
-                    cube.F();
+                    cube.startRotation('F');
                 else if (keyPressed->scancode == sf::Keyboard::Scancode::B)
-                    cube.B();
+                    cube.startRotation('B');
 
             }
         }
@@ -57,7 +57,8 @@ int main()
 
         window.clear();
 
-        cam.drawCube(window, cube);
+        cube.manageRotation(1.f);
+        cam.draw(window, cube);
 
         window.display();
     }

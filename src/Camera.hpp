@@ -6,6 +6,7 @@
 
 #include <sfml/Graphics.hpp>
 
+#include "RenderCube.hpp"
 #include "Cube.hpp"
 
 class Camera {
@@ -28,16 +29,7 @@ class Camera {
                              ((-v.y / viewportHeight) + 0.5f) * m_imageHeight };
     }
 
-public:
-    Camera(int imageWidth, int imageHeight, float centerZ = 20.f, float viewportZ = 10.f) : m_imageWidth(imageWidth), m_imageHeight(imageHeight) {
-        viewportWidth = 8.f;
-        viewportHeight = viewportWidth * static_cast<float>(m_imageHeight) / static_cast<float>(m_imageWidth);
-
-        m_center.z = centerZ;
-        m_viewPortCenter.z = viewportZ;
-    }
-
-    void drawCube(sf::RenderWindow& win, const Cube& cube) const {
+    void drawCube(sf::RenderWindow& win, const RenderCube& cube) const {
         std::array<int, 6> faceOrder{ 0, 1, 2, 3, 4, 5 };
         std::sort(faceOrder.begin(), faceOrder.end(), [&cube](int a, int b) {
             return cube.getFaceNormal(a).dot({ 0.f, 0.f, -1.f }) > cube.getFaceNormal(b).dot({ 0.f, 0.f, -1.f });
@@ -56,9 +48,12 @@ public:
 
             for (int j = 0; j < numSides; j++) {
                 for (int k = 0; k < numSides; k++) {
+                    sf::Color faceColor{ cube.faceColors[i][j][k] };
+                    if (faceColor == sf::Color::Black) continue;
+
                     sf::ConvexShape face;
                     face.setPointCount(4);
-                    face.setFillColor(cube.getFaceColors()[i][j][k]);
+                    face.setFillColor(faceColor);
 
                     sf::Vector3 base{ v0 + (y * static_cast<float>(j)) + (x * static_cast<float>(k)) };
 
@@ -77,6 +72,28 @@ public:
 
     }
 
+public:
+    Camera(int imageWidth, int imageHeight, float centerZ = 20.f, float viewportZ = 10.f) : m_imageWidth(imageWidth), m_imageHeight(imageHeight) {
+        viewportWidth = 8.f;
+        viewportHeight = viewportWidth * static_cast<float>(m_imageHeight) / static_cast<float>(m_imageWidth);
 
+        m_center.z = centerZ;
+        m_viewPortCenter.z = viewportZ;
+    }
 
+    void draw(sf::RenderWindow& win, const Cube& cube) const {
+        if (cube.getState() == Cube::IDLE) {
+            drawCube(win, cube);
+        }
+        else if (cube.getState() == Cube::ROTATING) {
+            if (cube.getRotationAxis().dot({ 0.f, 0.f, -1.f }) > 0.f) {
+                drawCube(win, cube.getRenderCubes()[0]);
+                drawCube(win, cube.getRenderCubes()[1]);
+            }
+            else {
+                drawCube(win, cube.getRenderCubes()[1]);
+                drawCube(win, cube.getRenderCubes()[0]);
+            }
+        }
+    }
 };
