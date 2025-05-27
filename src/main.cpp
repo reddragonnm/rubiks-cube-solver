@@ -2,11 +2,12 @@
 
 #include "Camera.hpp"
 #include "Cube.hpp"
+#include "Solver3x3.hpp"
 
 constexpr int windowWidth{ 800 };
 constexpr int windowHeight{ 600 };
 
-constexpr float rotationSpeed{ .13f };
+constexpr float rotationSpeed{ .1f };
 constexpr float faceRotationSpeed{ 500.f };
 constexpr float cubeletSize{ 2.f };
 
@@ -14,6 +15,7 @@ int main()
 {
     Cube cube{ cubeletSize };
     Camera cam{ windowWidth, windowHeight };
+    Solver3x3 solver{};
 
     sf::ContextSettings settings;
     settings.antiAliasingLevel = 8;
@@ -55,6 +57,13 @@ int main()
 
                 else if (keyPressed->scancode == sf::Keyboard::Scancode::Space)
                     cube.shuffle(100);
+
+                else if (keyPressed->scancode == sf::Keyboard::Scancode::Enter && cube.getState() == Cube::IDLE) {
+                    auto solution{ solver.solve(cube) };
+                    for (const auto& move : solution) {
+                        cube.startRotation(move);
+                    }
+                }
             }
         }
 
