@@ -2,7 +2,7 @@
 
 #include "Camera.hpp"
 #include "Cube.hpp"
-#include "Solver3x3.hpp"
+#include "Solver.hpp"
 
 constexpr int windowWidth{ 800 };
 constexpr int windowHeight{ 600 };
@@ -15,7 +15,6 @@ int main()
 {
     Cube cube{ cubeletSize };
     Camera cam{ windowWidth, windowHeight };
-    Solver3x3 solver{};
 
     sf::ContextSettings settings;
     settings.antiAliasingLevel = 8;
@@ -59,7 +58,7 @@ int main()
                     cube.shuffle(100);
 
                 else if (keyPressed->scancode == sf::Keyboard::Scancode::Enter && cube.getState() == Cube::IDLE) {
-                    auto solution{ solver.solve(cube) };
+                    auto solution{ Solver::solve(cube) };
                     for (const auto& move : solution) {
                         cube.startRotation(move);
                     }

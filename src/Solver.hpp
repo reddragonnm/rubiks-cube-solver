@@ -7,14 +7,8 @@
 
 #include "Cube.hpp"
 
-class Solver3x3 {
-
-
-public:
-    Solver3x3() {}
-
+namespace Solver {
     std::vector<char> solve(const Cube& cube) {
-        std::vector<char> solution;
-        return solution;
+
     }
-};
+}
