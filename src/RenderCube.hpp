@@ -7,6 +7,15 @@
 
 constexpr int numSides{ 3 };
 
+constexpr std::array<sf::Color, 6> defaultFaceColors{
+    sf::Color::Red,
+    sf::Color::Blue,
+    sf::Color { 255, 165, 0 }, // Orange
+    sf::Color::Green,
+    sf::Color::White,
+    sf::Color::Yellow
+};
+
 using FaceColors = std::array<std::array<std::array<sf::Color, numSides>, numSides>, 6>;
 using Vertices = std::array<sf::Vector3f, 8>;
 
@@ -18,7 +27,7 @@ protected:
     sf::Vector3f m_j{ 0.f, 1.f, 0.f };
     sf::Vector3f m_k{ 0.f, 0.f, 1.f };
 
-    std::array<sf::Vector3f, 8> m_vertices{};
+    Vertices m_vertices{};
 
     static constexpr std::array<std::tuple<int, int, int>, 8> vertexOffsets{ {
         { -1, 1, 1 },
@@ -76,19 +85,10 @@ public:
     }
 
     void setFaceColorDefault() {
-        static constexpr std::array<sf::Color, 6> colors{
-            sf::Color::Red,
-            sf::Color::Blue,
-            sf::Color { 255, 165, 0 },
-            sf::Color::Green,
-            sf::Color::White,
-            sf::Color::Yellow
-        };
-
         for (int i = 0; i < 6; i++) {
             for (int j = 0; j < numSides; j++) {
                 for (int k = 0; k < numSides; k++) {
-                    faceColors[i][j][k] = colors[i];
+                    faceColors[i][j][k] = defaultFaceColors[i];
                 }
             }
         }

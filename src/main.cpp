@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include <SFML/Graphics.hpp>
 
 #include "Camera.hpp"
@@ -64,6 +66,10 @@ int main()
                     }
                 }
             }
+        }
+
+        if (cube.getState() == Cube::IDLE) {
+            std::cout << Solver::getCornerOrientation(cube.faceColors) << '\n';
         }
 
         window.clear();
