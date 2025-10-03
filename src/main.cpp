@@ -69,7 +69,7 @@ int main()
         }
 
         if (cube.getState() == Cube::IDLE) {
-            std::cout << Solver::getCornerOrientation(cube.faceColors) << '\n';
+            std::cout << Solver::getCornerOrientation(cube.faceColors) << ' ' << Solver::getEdgeOrientation(cube.faceColors) << '\n';
         }
 
         window.clear();
