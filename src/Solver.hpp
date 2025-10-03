@@ -48,20 +48,55 @@ namespace Solver {
         {'D', 5}
     };
 
-    int getCornerOrientation(const FaceColors& colors) {
-        static constexpr std::array<std::pair<int, int>, 4> positions{ {
-            {0, 0},
-            {0, 2},
-            {2, 2},
-            {2, 0}
+    constexpr std::array<std::array<int, 4>, 12> nCr{ {
+            // r = 0   1    2     3
+            { 1,   0,   0,    0 },    // n = 0
+            { 1,   1,   0,    0 },    // n = 1
+            { 1,   2,   1,    0 },    // n = 2
+            { 1,   3,   3,    1 },    // n = 3
+            { 1,   4,   6,    4 },    // n = 4
+            { 1,   5,  10,   10 },    // n = 5
+            { 1,   6,  15,   20 },    // n = 6
+            { 1,   7,  21,   35 },    // n = 7
+            { 1,   8,  28,   56 },    // n = 8
+            { 1,   9,  36,   84 },    // n = 9
+            { 1,  10,  45,  120 },    // n = 10
+            { 1,  11,  55,  165 }     // n = 11
         } };
+
+    std::string debugColorName(const sf::Color& color) {
+        if (color == sf::Color::Red) return "Red";
+        if (color == sf::Color::Blue) return "Blue";
+        if (color == sf::Color{ 255, 165, 0 }) return "Orange";
+        if (color == sf::Color::Green) return "Green";
+        if (color == sf::Color::White) return "White";
+        if (color == sf::Color::Yellow) return "Yellow";
+        return "Unknown";
+    }
+
+    constexpr std::array<std::pair<int, int>, 4> cornerPositions{ {
+        {0, 0},
+        {0, 2},
+        {2, 2},
+        {2, 0}
+    } };
+
+    constexpr std::array<std::pair<int, int>, 4> edgePositions{ {
+        {0, 1},
+        {1, 2},
+        {2, 1},
+        {1, 0}
+    } };
+
+
+    int getCornerOrientation(const FaceColors& colors) {
 
         int ans{ 0 };
 
         for (int i = 0; i < 7; i++) { // DRB not considered
             for (int j = 0; j < 3; j++) {
                 const int face{ faceIndex.at(corners[i][j * 2]) };
-                const auto [a, b] = positions[corners[i][j * 2 + 1] - '0'];
+                const auto [a, b] = cornerPositions[corners[i][j * 2 + 1] - '0'];
                 const sf::Color color{ colors[face][a][b] };
 
                 if (color == defaultFaceColors[4] || color == defaultFaceColors[5]) { // up or down color
@@ -74,31 +109,14 @@ namespace Solver {
         return ans;
     }
 
-    std::string debugColorName(const sf::Color& color) {
-        if (color == sf::Color::Red) return "Red";
-        if (color == sf::Color::Blue) return "Blue";
-        if (color == sf::Color{ 255, 165, 0 }) return "Orange";
-        if (color == sf::Color::Green) return "Green";
-        if (color == sf::Color::White) return "White";
-        if (color == sf::Color::Yellow) return "Yellow";
-        return "Unknown";
-    }
-
     int getEdgeOrientation(const FaceColors& colors) {
-        static constexpr std::array<std::pair<int, int>, 4> positions{ {
-            {0, 1},
-            {1, 2},
-            {2, 1},
-            {1, 0}
-        } };
-
         int ans{ 0 };
 
         for (int i = 0; i < 11; i++) { // BR not considered
-            const auto [a1, b1] { positions[edges[i][1] - '0'] };
+            const auto [a1, b1] { edgePositions[edges[i][1] - '0'] };
             const sf::Color color1{ colors[faceIndex.at(edges[i][0])][a1][b1] };
 
-            const auto [a2, b2] { positions[edges[i][3] - '0'] };
+            const auto [a2, b2] { edgePositions[edges[i][3] - '0'] };
             const sf::Color color2{ colors[faceIndex.at(edges[i][2])][a2][b2] };
 
             int x{ 1 };
@@ -110,6 +128,26 @@ namespace Solver {
 
 
             ans = ans * 2 + x;
+        }
+
+        return ans;
+    }
+
+    int getUDSliceCoordinate(const FaceColors& colors) {
+        int a = -1;
+        int ans{ 0 };
+
+        for (int i = 0; i < 12; i++) {
+            const auto [a1, b1] { edgePositions[edges[i][1] - '0'] };
+            const sf::Color color1{ colors[faceIndex.at(edges[i][0])][a1][b1] };
+
+            const auto [a2, b2] { edgePositions[edges[i][3] - '0'] };
+            const sf::Color color2{ colors[faceIndex.at(edges[i][2])][a2][b2] };
+
+            bool isUDSlice{ color1 != defaultFaceColors[4] && color1 != defaultFaceColors[5] && color2 != defaultFaceColors[4] && color2 != defaultFaceColors[5] };
+
+            if (isUDSlice) a++;
+            else if (a != -1) ans += nCr[i][a];
         }
 
         return ans;
