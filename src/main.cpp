@@ -13,7 +13,7 @@ constexpr float rotationSpeed{ .1f };
 constexpr float faceRotationSpeed{ 500.f };
 constexpr float cubeletSize{ 2.f };
 
-int main()
+int main2()
 {
     Cube cube{ cubeletSize };
     Camera cam{ windowWidth, windowHeight };
@@ -81,4 +81,8 @@ int main()
 
         window.display();
     }
+}
+
+int main() {
+    Solver::generateCornerOrientationMoveTable();
 }

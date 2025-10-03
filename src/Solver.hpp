@@ -3,6 +3,7 @@
 #include <array>
 #include <unordered_set>
 #include <vector>
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <map>
@@ -18,7 +19,7 @@ namespace Solver {
         "U3F0L1",
         "U0L0B1",
         "U1B0R1",
-        "D1F2R2",
+        "D1F2R3",
         "D0L2F3",
         "D3B2L3",
         "D2R2B3"
@@ -90,7 +91,6 @@ namespace Solver {
 
 
     int getCornerOrientation(const FaceColors& colors) {
-
         int ans{ 0 };
 
         for (int i = 0; i < 7; i++) { // DRB not considered
@@ -151,6 +151,53 @@ namespace Solver {
         }
 
         return ans;
+    }
+
+    void moveCube(Cube& cube, char move) {
+        if (move == 'U') cube.U();
+        else if (move == 'D') cube.D();
+        else if (move == 'L') cube.L();
+        else if (move == 'R') cube.R();
+        else if (move == 'F') cube.F();
+        else if (move == 'B') cube.B();
+    }
+
+    void generateCornerOrientationMoveTable() {
+        std::array<std::array<int, 18>, 2187> table;
+        std::array<bool, 2187> visited{};
+        int visitedCount{ 0 };
+
+
+        Cube cube{ 0.f };
+
+        const auto dfs{
+            [&](auto&& self) -> void {
+                const int coord {getCornerOrientation(cube.faceColors)};
+
+                std::cout << visitedCount << ' ' << coord << '\n';
+
+                if (visited[coord]) return;
+                visited[coord] = true;
+                visitedCount++;
+
+                for (char move : {'F', 'R', 'B', 'L', 'U', 'D'}) {
+                    for (int i = 0; i < 4; i++) {
+                        moveCube(cube, move);
+                        table[coord][i] = move;
+                        self(self);
+
+                        if (visitedCount == 2187) return;
+                    }
+                }
+            }
+        };
+
+        dfs(dfs);
+
+
+        // Save binary
+        std::ofstream out("cornerOrientation1.bin", std::ios::binary);
+        out.write(reinterpret_cast<const char*>(table.data()), table.size() * sizeof(table[0]));
     }
 
     std::vector<char> solve(const Cube& cube) {

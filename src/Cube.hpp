@@ -10,6 +10,14 @@
 
 #include <sfml/Graphics.hpp>
 
+
+// forward declarations
+class Cube;
+namespace Solver {
+    void moveCube(Cube& cube, char move);
+};
+
+
 class Cube : public RenderCube {
 public:
     enum State {
@@ -207,6 +215,8 @@ private:
 
 public:
     Cube(float cubeletSize) : RenderCube{ cubeletSize } {}
+
+    friend void Solver::moveCube(Cube& cube, char move);
 
     void shuffle(int numberOfRotations) {
         for (int i = 0; i < numberOfRotations; i++) {
