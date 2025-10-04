@@ -84,5 +84,5 @@ int main2()
 }
 
 int main() {
-    Solver::generateCornerOrientationMoveTable();
+    Solver::generateEdgeOrientationMoveTable();
 }

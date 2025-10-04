@@ -174,6 +174,11 @@ namespace Solver {
             [&](auto&& self) -> void {
                 const int coord {getCornerOrientation(cube.faceColors)};
 
+                if (coord < 0 || coord >= 2187) {
+                    std::cout << "Invalid coord: " << coord << '\n';
+                    return;
+                }
+
                 std::cout << visitedCount << ' ' << coord << '\n';
 
                 if (visited[coord]) return;
@@ -185,8 +190,6 @@ namespace Solver {
                         moveCube(cube, move);
                         table[coord][i] = move;
                         self(self);
-
-                        if (visitedCount == 2187) return;
                     }
                 }
             }
@@ -198,6 +201,94 @@ namespace Solver {
         // Save binary
         std::ofstream out("cornerOrientation1.bin", std::ios::binary);
         out.write(reinterpret_cast<const char*>(table.data()), table.size() * sizeof(table[0]));
+    }
+
+    void generateEdgeOrientationMoveTable() {
+        std::array<std::array<int, 18>, 2048> table;
+        std::array<bool, 2048> visited{};
+        int visitedCount{ 0 };
+
+
+        Cube cube{ 0.f };
+
+        const auto dfs{
+            [&](auto&& self) -> void {
+                const int coord {getEdgeOrientation(cube.faceColors)};
+
+                if (coord < 0 || coord >= 2048) {
+                    std::cout << "Invalid coord: " << coord << '\n';
+                    return;
+                }
+
+                std::cout << visitedCount << ' ' << coord << '\n';
+
+                if (visited[coord]) return;
+                visited[coord] = true;
+                visitedCount++;
+
+                for (char move : {'F', 'R', 'B', 'L', 'U', 'D'}) {
+                    for (int i = 0; i < 4; i++) {
+                        moveCube(cube, move);
+                        table[coord][i] = move;
+                        self(self);
+                    }
+                }
+            }
+        };
+
+        dfs(dfs);
+
+
+        // Save binary
+        std::ofstream out("edgeOrientation1.bin", std::ios::binary);
+        out.write(reinterpret_cast<const char*>(table.data()), table.size() * sizeof(table[0]));
+    }
+
+    void generateUDSliceCoordinateTable() {
+        std::array<std::array<int, 18>, 495> table;
+        std::array<bool, 495> visited{};
+        int visitedCount{ 0 };
+
+
+        Cube cube{ 0.f };
+
+        const auto dfs{
+            [&](auto&& self) -> void {
+                const int coord {getUDSliceCoordinate(cube.faceColors)};
+
+                if (coord < 0 || coord >= 495) {
+                    std::cout << "Invalid coord: " << coord << '\n';
+                    return;
+                }
+
+                std::cout << visitedCount << ' ' << coord << '\n';
+
+                if (visited[coord]) return;
+                visited[coord] = true;
+                visitedCount++;
+
+                for (char move : {'F', 'R', 'B', 'L', 'U', 'D'}) {
+                    for (int i = 0; i < 4; i++) {
+                        moveCube(cube, move);
+                        table[coord][i] = move;
+                        self(self);
+                    }
+                }
+            }
+        };
+
+        dfs(dfs);
+
+
+        // Save binary
+        std::ofstream out("UDSliceCoordinate1.bin", std::ios::binary);
+        out.write(reinterpret_cast<const char*>(table.data()), table.size() * sizeof(table[0]));
+    }
+
+    void generateAllMoveTables() {
+        generateCornerOrientationMoveTable();
+        generateEdgeOrientationMoveTable();
+        generateUDSliceCoordinateTable();
     }
 
     std::vector<char> solve(const Cube& cube) {
