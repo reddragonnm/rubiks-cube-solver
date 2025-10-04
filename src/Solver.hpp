@@ -306,6 +306,56 @@ namespace Solver {
         generateUDSliceCoordinateTable();
     }
 
+    auto generatePhase1PruneTable() {
+        std::vector<int> table(2187 * 2048, -1); std::vector<int> q;
+        
+        std::array<std::array<int, 18>, 2187> cornerTable;
+        std::ifstream in1("cornerOrientation1.bin", std::ios::binary);
+        in1.read(reinterpret_cast<char*>(cornerTable.data()), cornerTable.size() * sizeof(cornerTable[0]));
+        in1.close();
+
+        std::array<std::array<int, 18>, 2048> edgeTable;
+        std::ifstream in2("edgeOrientation1.bin", std::ios::binary);
+        in2.read(reinterpret_cast<char*>(edgeTable.data()), edgeTable.size() * sizeof(edgeTable[0]));
+        in2.close();
+
+        auto idx = [](int corner, int edge) -> int { return corner * 2048 + edge; };
+
+        table[idx(0, 0)] = 0;
+        q.push_back(idx(0, 0));
+
+        int head{ 0 };
+
+        while (head < q.size()) {
+            int cur{ q[head++] };
+            int curCorner{ cur / 2048 };
+            int curEdge{ cur % 2048 };
+            int depth{ table[cur] };
+
+            for (int i = 0; i < 18; i++) {
+                const int nxtCorner{ cornerTable[curCorner][i] };
+                const int nxtEdge{ edgeTable[curEdge][i] };
+                const int nxt{ idx(nxtCorner, nxtEdge) };
+
+                if (table[nxt] == -1) {
+                    table[nxt] = depth + 1;
+                    q.push_back(nxt);
+                }
+            }
+
+            if (head % 10000 == 0) {
+                std::cout << head << ' ' << q.size() << '\n';
+            }
+        }
+
+        const int maxDepth{ *std::max_element(table.begin(), table.end()) };
+        std::cout << "Max depth: " << maxDepth << '\n';
+        std::ofstream out("pruningTable1.bin", std::ios::binary);
+        out.write(reinterpret_cast<const char*>(table.data()), table.size() * sizeof(table[0]));
+
+        return table;
+    }
+
     std::vector<char> solve(const Cube& cube) {
         return {};
     }
