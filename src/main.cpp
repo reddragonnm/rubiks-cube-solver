@@ -84,5 +84,27 @@ int main2()
 }
 
 int main() {
-    Solver::generateEdgeOrientationMoveTable();
+    std::cout << "Start\n";
+    auto table{ Solver::generateEdgeOrientationMoveTable() };
+
+    int unfilled{ 0 };
+    for (const auto& row : table) {
+        for (const auto& val : row) {
+            if (val == -1) unfilled++;
+        }
+    }
+
+    // get maximum value and minimum value
+    int maxVal{ -1 };
+    int minVal{ 10000 };
+    for (const auto& row : table) {
+        for (const auto& val : row) {
+            if (val > maxVal) maxVal = val;
+            if (val < minVal && val != -1) minVal = val;
+        }
+    }
+
+    std::cout << "Max value: " << maxVal << '\n';
+    std::cout << "Min value: " << minVal << '\n';
+    std::cout << "Unfilled entries: " << unfilled << '\n';
 }
