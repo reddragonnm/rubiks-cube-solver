@@ -13,7 +13,7 @@ constexpr float rotationSpeed{ .1f };
 constexpr float faceRotationSpeed{ 500.f };
 constexpr float cubeletSize{ 2.f };
 
-int main2()
+int main()
 {
     Cube cube{ cubeletSize };
     Camera cam{ windowWidth, windowHeight };
@@ -57,20 +57,22 @@ int main2()
                     cube.startRotation('B');
 
                 else if (keyPressed->scancode == sf::Keyboard::Scancode::Space)
-                    cube.shuffle(100);
+                    cube.shuffle(20);
 
                 else if (keyPressed->scancode == sf::Keyboard::Scancode::Enter && cube.getState() == Cube::IDLE) {
-                    auto solution{ Solver::solve(cube) };
-                    for (const auto& move : solution) {
-                        cube.startRotation(move);
-                    }
+                    // auto solution{ Solver::solve(cube) };
+                    // for (const auto& move : solution) {
+                    //     cube.startRotation(move);
+                    // }
+
+                    Solver::idaPhase1Search(cube);
                 }
             }
         }
 
-        if (cube.getState() == Cube::IDLE) {
-            std::cout << Solver::getCornerOrientation(cube.faceColors) << ' ' << Solver::getEdgeOrientation(cube.faceColors) << ' ' << Solver::getUDSliceCoordinate(cube.faceColors) << '\n';
-        }
+        // if (cube.getState() == Cube::IDLE) {
+        //     std::cout << Solver::getCornerOrientation(cube.faceColors) << ' ' << Solver::getEdgeOrientation(cube.faceColors) << ' ' << Solver::getUDSliceCoordinate(cube.faceColors) << '\n';
+        // }
 
         window.clear();
 
@@ -81,15 +83,4 @@ int main2()
 
         window.display();
     }
-}
-
-int main() {
-    std::cout << "Start\n";
-    auto table{ Solver::generatePhase1PruneTable() };
-
-    int empty{ 0 };
-    for (const auto& val : table) {
-        if (val == -1) empty++;
-    }
-    std::cout << "Empty: " << empty << '\n';
 }

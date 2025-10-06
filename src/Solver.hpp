@@ -308,7 +308,7 @@ namespace Solver {
 
     auto generatePhase1PruneTable() {
         std::vector<int> table(2187 * 2048, -1); std::vector<int> q;
-        
+
         std::array<std::array<int, 18>, 2187> cornerTable;
         std::ifstream in1("cornerOrientation1.bin", std::ios::binary);
         in1.read(reinterpret_cast<char*>(cornerTable.data()), cornerTable.size() * sizeof(cornerTable[0]));
@@ -354,6 +354,94 @@ namespace Solver {
         out.write(reinterpret_cast<const char*>(table.data()), table.size() * sizeof(table[0]));
 
         return table;
+    }
+
+    int dfsPhase1(int corner, int edge, int udSlice, int g, int threshold, int lastMove, std::vector<int>& path, std::array<std::array<int, 18>, 2187>& cornerTable, std::array<std::array<int, 18>, 2048>& edgeTable, std::array<std::array<int, 18>, 495>& udSliceTable, std::vector<int>& pruneTable) {
+        int h{ pruneTable[corner * 2048 + edge] };
+        int f{ g + h };
+
+        if (f > threshold) return f;
+        if (corner == 0 && edge == 0 && udSlice == 0) {
+            // solution found
+            for (int move : path) {
+                std::cout << "FRBLUD"[move / 3];
+                if (move % 3 == 1) std::cout << "2";
+                else if (move % 3 == 2) std::cout << "'";
+                std::cout << ' ';
+            }
+            std::cout << '\n';
+            return -1;
+        }
+
+        int minOver{ 1 << 30 };
+
+        for (int move = 0; move < 18; move++) {
+            if (move / 3 == lastMove / 3) continue; // same face
+
+            int newCorner{ cornerTable[corner][move] };
+            int newEdge{ edgeTable[edge][move] };
+            int newUDSlice{ udSliceTable[udSlice][move] };
+
+            int childH{ pruneTable[newCorner * 2048 + newEdge] };
+            if (g + 1 + childH > threshold) {
+                minOver = std::min(minOver, g + 1 + childH);
+                continue;
+            }
+
+            path.push_back(move);
+            int t{ dfsPhase1(newCorner, newEdge, newUDSlice, g + 1, threshold, move, path, cornerTable, edgeTable, udSliceTable, pruneTable) };
+            if (t == -1) return -1;
+            if (t < minOver) minOver = t;
+            path.pop_back();
+        }
+
+        return minOver;
+    }
+
+    void idaPhase1Search(const Cube& cube) {
+        std::array<std::array<int, 18>, 2187> cornerTable;
+        std::ifstream in1("cornerOrientation1.bin", std::ios::binary);
+        in1.read(reinterpret_cast<char*>(cornerTable.data()), cornerTable.size() * sizeof(cornerTable[0]));
+        in1.close();
+
+        std::array<std::array<int, 18>, 2048> edgeTable;
+        std::ifstream in2("edgeOrientation1.bin", std::ios::binary);
+        in2.read(reinterpret_cast<char*>(edgeTable.data()), edgeTable.size() * sizeof(edgeTable[0]));
+        in2.close();
+
+        std::array<std::array<int, 18>, 495> udSliceTable;
+        std::ifstream in3("UDSliceCoordinate1.bin", std::ios::binary);
+        in3.read(reinterpret_cast<char*>(udSliceTable.data()), udSliceTable.size() * sizeof(udSliceTable[0]));
+        in3.close();
+
+        std::vector<int> pruneTable(2187 * 2048);
+        std::ifstream in4("pruningTable1.bin", std::ios::binary);
+        in4.read(reinterpret_cast<char*>(pruneTable.data()), pruneTable.size() * sizeof(pruneTable[0]));
+        in4.close();
+
+        int startCorner{ getCornerOrientation(cube.faceColors) };
+        int startEdge{ getEdgeOrientation(cube.faceColors) };
+        int startUDSlice{ getUDSliceCoordinate(cube.faceColors) };
+
+        int threshold{ std::max({ pruneTable[startCorner * 2048 + startEdge], 1 }) };
+        std::vector<int> path;
+
+        while (true) {
+            int nextThreshold{ dfsPhase1(startCorner, startEdge, startUDSlice, 0, threshold, -1, path, cornerTable, edgeTable, udSliceTable, pruneTable) };
+
+            std::cout << "Next threshold: " << nextThreshold << '\n';
+
+            if (nextThreshold == -1) {
+                std::cout << "Solution found with " << path.size() << " moves\n";
+                break;
+            }
+            if (nextThreshold == (1 << 30)) {
+                std::cout << "No solution found\n";
+                break;
+            }
+
+            threshold = nextThreshold;
+        }
     }
 
     std::vector<char> solve(const Cube& cube) {
