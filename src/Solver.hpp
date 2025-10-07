@@ -7,6 +7,7 @@
 #include <iostream>
 #include <string>
 #include <map>
+#include <stack>
 
 #include <algorithm>
 #include <filesystem>
@@ -627,63 +628,172 @@ namespace Solver {
     }
 
     auto generateCornerPermutationMoveTable() {
-        std::array<std::array<int, 10>, factorial[8]> table;
-        for (auto& row : table) row.fill(-1);
-
+        std::array<std::vector<int>, factorial[8]> table{};
         std::array<bool, factorial[8]> visited{};
         int visitedCount{ 0 };
 
-
+        std::stack<std::pair<int, FaceColors>> stk;
         Cube cube{ 0.f };
+        stk.push({ 0, cube.faceColors });
 
-        const auto dfs{
-            [&](auto&& self, int coord, int depth) -> void {
-                if (coord < 0 || coord >= factorial[8]) {
-                    std::cout << "Invalid coord: " << coord << '\n';
-                    return;
-                }
+        while (!stk.empty()) {
+            auto [coord, faceColors] = stk.top();
+            stk.pop();
 
-                std::cout << visitedCount << ' ' << coord << ' ' << depth << std::endl;
+            if (coord < 0 || coord >= factorial[8]) {
+                std::cout << "Invalid coord: " << coord << '\n';
+                continue;
+            }
 
-                if (visited[coord]) return;
-                visited[coord] = true;
-                visitedCount++;
+            if (visited[coord]) continue;
 
-                auto prevColors{ cube.faceColors };
+            visited[coord] = true;
+            visitedCount++;
+            std::cout << visitedCount << ' ' << coord << std::endl;
 
-                for (int i = 0; i < 4; i++) {
-                    moveCube(cube, "FRLB"[i]);
-                    moveCube(cube, "FRLB"[i]);
-
-                    const int newCoord {getCornerPermutation(cube.faceColors)};
-                    table[coord][i] = newCoord;
-
-                    self(self, newCoord, depth + 1);
-
-                    moveCube(cube, "FRLB"[i]); // to reset
-                    moveCube(cube, "FRLB"[i]);
-                }
-
-                for (int i = 0; i < 2; i++) {
-                    for (int j = 0; j < 3; j++) {
-                        moveCube(cube, "UD"[i]);
-
-                        const int newCoord {getCornerPermutation(cube.faceColors)};
-                        table[coord][4 + i * 3 + j] = newCoord;
-
-                        self(self, newCoord, depth + 1);
-                    }
-                    moveCube(cube, "UD"[i]); // to reset
+            for (int i = 0; i < 4; i++) {
+                cube.faceColors = faceColors;
+                moveCube(cube, "FRLB"[i]);
+                moveCube(cube, "FRLB"[i]);
+                const int newCoord{ getCornerPermutation(cube.faceColors) };
+                table[coord].push_back(newCoord);
+                if (!visited[newCoord]) {
+                    stk.push({ newCoord, cube.faceColors });
                 }
             }
-        };
 
-        dfs(dfs, 0, 0);
-        std::cout << "Total visited: " << visitedCount << std::endl;
+            for (int i = 0; i < 2; i++) {
+                cube.faceColors = faceColors;
+                for (int j = 0; j < 3; j++) {
+                    moveCube(cube, "UD"[i]);
+                    const int newCoord{ getCornerPermutation(cube.faceColors) };
+                    table[coord].push_back(newCoord);
+                    if (!visited[newCoord]) {
+                        stk.push({ newCoord, cube.faceColors });
+                    }
+                }
+            }
+        }
 
         // Save binary
         std::ofstream out("cornerPermutation2.bin", std::ios::binary);
-        out.write(reinterpret_cast<const char*>(table.data()), table.size() * sizeof(table[0]));
+        out.write(reinterpret_cast<const char*>(table.data()),
+            table.size() * sizeof(table[0]));
+        out.close();
+
+        return table;
+    }
+
+    auto generateEdgePermutationMoveTable() {
+        std::array<std::vector<int>, factorial[8]> table{};
+        std::array<bool, factorial[8]> visited{};
+        int visitedCount{ 0 };
+
+        std::stack<std::pair<int, FaceColors>> stk;
+        Cube cube{ 0.f };
+        stk.push({ 0, cube.faceColors });
+
+        while (!stk.empty()) {
+            auto [coord, faceColors] = stk.top();
+            stk.pop();
+
+            if (coord < 0 || coord >= factorial[8]) {
+                std::cout << "Invalid coord: " << coord << '\n';
+                continue;
+            }
+
+            if (visited[coord]) continue;
+
+            visited[coord] = true;
+            visitedCount++;
+            std::cout << visitedCount << ' ' << coord << std::endl;
+
+            for (int i = 0; i < 4; i++) {
+                cube.faceColors = faceColors;
+                moveCube(cube, "FRLB"[i]);
+                moveCube(cube, "FRLB"[i]);
+                const int newCoord{ getEdgePermutation(cube.faceColors) };
+                table[coord].push_back(newCoord);
+                if (!visited[newCoord]) {
+                    stk.push({ newCoord, cube.faceColors });
+                }
+            }
+
+            for (int i = 0; i < 2; i++) {
+                cube.faceColors = faceColors;
+                for (int j = 0; j < 3; j++) {
+                    moveCube(cube, "UD"[i]);
+                    const int newCoord{ getEdgePermutation(cube.faceColors) };
+                    table[coord].push_back(newCoord);
+                    if (!visited[newCoord]) {
+                        stk.push({ newCoord, cube.faceColors });
+                    }
+                }
+            }
+        }
+
+        // Save binary
+        std::ofstream out("edgePermutation2.bin", std::ios::binary);
+        out.write(reinterpret_cast<const char*>(table.data()),
+            table.size() * sizeof(table[0]));
+        out.close();
+
+        return table;
+    }
+
+    auto generateUDPermutationMoveTable() {
+        std::array<std::vector<int>, 24> table{};
+        std::array<bool, 24> visited{};
+        int visitedCount{ 0 };
+
+        std::stack<std::pair<int, FaceColors>> stk;
+        Cube cube{ 0.f };
+        stk.push({ 0, cube.faceColors });
+
+        while (!stk.empty()) {
+            auto [coord, faceColors] = stk.top();
+            stk.pop();
+
+            if (coord < 0 || coord >= 24) {
+                std::cout << "Invalid coord: " << coord << '\n';
+                continue;
+            }
+
+            if (visited[coord]) continue;
+
+            visited[coord] = true;
+            visitedCount++;
+            std::cout << visitedCount << ' ' << coord << std::endl;
+
+            for (int i = 0; i < 4; i++) {
+                cube.faceColors = faceColors;
+                moveCube(cube, "FRLB"[i]);
+                moveCube(cube, "FRLB"[i]);
+                const int newCoord{ getUDSlicePermutation(cube.faceColors) };
+                table[coord].push_back(newCoord);
+                if (!visited[newCoord]) {
+                    stk.push({ newCoord, cube.faceColors });
+                }
+            }
+
+            for (int i = 0; i < 2; i++) {
+                cube.faceColors = faceColors;
+                for (int j = 0; j < 3; j++) {
+                    moveCube(cube, "UD"[i]);
+                    const int newCoord{ getUDSlicePermutation(cube.faceColors) };
+                    table[coord].push_back(newCoord);
+                    if (!visited[newCoord]) {
+                        stk.push({ newCoord, cube.faceColors });
+                    }
+                }
+            }
+        }
+
+        // Save binary
+        std::ofstream out("UDPermutation2.bin", std::ios::binary);
+        out.write(reinterpret_cast<const char*>(table.data()),
+            table.size() * sizeof(table[0]));
+        out.close();
 
         return table;
     }

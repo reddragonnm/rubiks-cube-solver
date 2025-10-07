@@ -86,13 +86,11 @@ int main2()
 }
 
 int main() {
-    auto table{ Solver::generateCornerPermutationMoveTable() };
+    auto table{ Solver::generateUDPermutationMoveTable() };
 
     int empty{ 0 };
     for (const auto& row : table) {
-        for (const auto& val : row) {
-            if (val == -1) empty++;
-        }
+        if (row.empty()) empty++;
     }
 
     std::cout << "Empty: " << empty << '\n';
