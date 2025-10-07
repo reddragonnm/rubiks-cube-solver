@@ -69,6 +69,8 @@ namespace Solver {
             { 1,  11,  55,  165 }     // n = 11
         } };
 
+    constexpr std::array<int, 8> factorial{ 1, 1, 2, 6, 24, 120, 720, 5040 };
+
     std::string debugColorName(const sf::Color& color) {
         if (color == sf::Color::Red) return "Red";
         if (color == sf::Color::Blue) return "Blue";
@@ -357,6 +359,16 @@ namespace Solver {
     }
 
     int dfsPhase1(int corner, int edge, int udSlice, int g, int threshold, int lastMove, std::vector<int>& path, std::array<std::array<int, 18>, 2187>& cornerTable, std::array<std::array<int, 18>, 2048>& edgeTable, std::array<std::array<int, 18>, 495>& udSliceTable, std::vector<int>& pruneTable) {
+        static const std::map<int, int> oppFaces{
+            {0, 2},
+            {1, 3},
+            {2, 0},
+            {3, 1},
+            {4, 5},
+            {5, 4}
+        };
+
+
         int h{ pruneTable[corner * 2048 + edge] };
         int f{ g + h };
 
@@ -377,6 +389,7 @@ namespace Solver {
 
         for (int move = 0; move < 18; move++) {
             if (move / 3 == lastMove / 3) continue; // same face
+            if (oppFaces.at(move / 3) == lastMove / 3) continue; // opposite face
 
             int newCorner{ cornerTable[corner][move] };
             int newEdge{ edgeTable[edge][move] };
@@ -442,6 +455,175 @@ namespace Solver {
 
             threshold = nextThreshold;
         }
+    }
+
+    bool isSameCorner(std::array<sf::Color, 3> a, std::array<sf::Color, 3> b) {
+        static auto sorter{
+            [](const sf::Color& c1, const sf::Color& c2) {
+                if (c1.r != c2.r) return c1.r < c2.r;
+                if (c1.g != c2.g) return c1.g < c2.g;
+                return c1.b < c2.b;
+            }
+        };
+
+        std::sort(a.begin(), a.end(), sorter);
+        std::sort(b.begin(), b.end(), sorter);
+
+        return a == b;
+    }
+
+    int getCornerPermutation(const FaceColors& colors) {
+        int ans{ 0 };
+
+        std::array<std::array<sf::Color, 3>, 8> defaultCornerColors{};
+
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 3; j++) {
+                const int face{ faceIndex.at(corners[i][j * 2]) };
+                defaultCornerColors[i][j] = defaultFaceColors[face];
+            }
+        }
+
+        std::array<int, 8> cornerOrder{};
+
+        for (int i = 0; i < 8; i++) {
+            std::array<sf::Color, 3> currentCornerColors{};
+
+            for (int j = 0; j < 3; j++) {
+                const int face{ faceIndex.at(corners[i][j * 2]) };
+                const auto [a, b] = cornerPositions[corners[i][j * 2 + 1] - '0'];
+
+                currentCornerColors[j] = colors[face][a][b];
+            }
+
+            for (int j = 0; j < 8; j++) {
+                if (isSameCorner(currentCornerColors, defaultCornerColors[j])) {
+                    cornerOrder[i] = j;
+                    break;
+                }
+            }
+        }
+
+        for (int i = 1; i < 8; i++) {
+            int num{ 0 };
+            for (int j = 0; j < i; j++) {
+                if (cornerOrder[j] > cornerOrder[i]) num++;
+            }
+
+            ans += num * factorial[i];
+        }
+
+        return ans;
+    }
+
+    bool isSameEdge(std::array<sf::Color, 2> a, std::array<sf::Color, 2> b) {
+        return (a[0] == b[0] && a[1] == b[1]) || (a[0] == b[1] && a[1] == b[0]);
+    }
+
+    int getEdgePermutation(const FaceColors& colors) { // only valid for phase 2
+        int ans{ 0 };
+
+        int cornerOrientation{ getCornerOrientation(colors) };
+        int edgeOrientation{ getEdgeOrientation(colors) };
+        int udSlice{ getUDSliceCoordinate(colors) };
+
+        if (cornerOrientation != 0 || edgeOrientation != 0 || udSlice != 0) {
+            // std::cout << "Invalid state for edge permutation\n";
+            return -1;
+        }
+
+        std::array<std::array<sf::Color, 2>, 8> defaultEdgeColors{};
+
+        for (int i = 0; i < 8; i++) { // only UD edges
+            for (int j = 0; j < 2; j++) {
+                const int face{ faceIndex.at(edges[i][j * 2]) };
+                defaultEdgeColors[i][j] = defaultFaceColors[face];
+            }
+        }
+
+        std::array<int, 8> edgeOrder{};
+
+        for (int i = 0; i < 8; i++) {
+            std::array<sf::Color, 2> currentEdgeColors{};
+
+            for (int j = 0; j < 2; j++) {
+                const int face{ faceIndex.at(edges[i][j * 2]) };
+                const auto [a, b] = edgePositions[edges[i][j * 2 + 1] - '0'];
+
+                currentEdgeColors[j] = colors[face][a][b];
+            }
+
+            for (int j = 0; j < 8; j++) {
+                if (isSameEdge(currentEdgeColors, defaultEdgeColors[j])) {
+                    edgeOrder[i] = j;
+                    break;
+                }
+            }
+        }
+
+        for (int i = 1; i < 8; i++) {
+            int num{ 0 };
+            for (int j = 0; j < i; j++) {
+                if (edgeOrder[j] > edgeOrder[i]) num++;
+            }
+
+            ans += num * factorial[i];
+        }
+
+        return ans;
+    }
+
+    int getUDSlicePermutation(const FaceColors& colors) {
+        int ans{ 0 };
+
+        int cornerOrientation{ getCornerOrientation(colors) };
+        int edgeOrientation{ getEdgeOrientation(colors) };
+        int udSlice{ getUDSliceCoordinate(colors) };
+
+        if (cornerOrientation != 0 || edgeOrientation != 0 || udSlice != 0) {
+            // std::cout << "Invalid state for edge permutation\n";
+            return -1;
+        }
+
+        std::array<std::array<sf::Color, 2>, 4> defaultEdgeColors{};
+
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 2; j++) {
+                const int face{ faceIndex.at(edges[i + 8][j * 2]) };
+                defaultEdgeColors[i][j] = defaultFaceColors[face];
+            }
+        }
+
+        std::array<int, 4> edgeOrder{};
+
+        for (int i = 0; i < 4; i++) {
+            std::array<sf::Color, 2> currentEdgeColors{};
+
+            for (int j = 0; j < 2; j++) {
+                const int face{ faceIndex.at(edges[i + 8][j * 2]) };
+                const auto [a, b] = edgePositions[edges[i + 8][j * 2 + 1] - '0'];
+
+                currentEdgeColors[j] = colors[face][a][b];
+            }
+
+            for (int j = 0; j < 4; j++) {
+                if (isSameEdge(currentEdgeColors, defaultEdgeColors[j])) {
+                    edgeOrder[i] = j;
+                    break;
+                }
+            }
+        }
+
+        for (int i = 1; i < 4; i++) {
+            int num{ 0 };
+            for (int j = 0; j < i; j++) {
+                if (edgeOrder[j] > edgeOrder[i]) num++;
+            }
+
+            ans += num * factorial[i];
+        }
+
+        return ans;
     }
 
     std::vector<char> solve(const Cube& cube) {

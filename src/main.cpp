@@ -70,9 +70,9 @@ int main()
             }
         }
 
-        // if (cube.getState() == Cube::IDLE) {
-        //     std::cout << Solver::getCornerOrientation(cube.faceColors) << ' ' << Solver::getEdgeOrientation(cube.faceColors) << ' ' << Solver::getUDSliceCoordinate(cube.faceColors) << '\n';
-        // }
+        if (cube.getState() == Cube::IDLE) {
+            std::cout << Solver::getCornerPermutation(cube.faceColors) << ' ' << Solver::getEdgePermutation(cube.faceColors) << ' ' << Solver::getUDSlicePermutation(cube.faceColors) << '\n';
+        }
 
         window.clear();
 
