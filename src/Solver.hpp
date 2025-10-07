@@ -69,7 +69,7 @@ namespace Solver {
             { 1,  11,  55,  165 }     // n = 11
         } };
 
-    constexpr std::array<int, 8> factorial{ 1, 1, 2, 6, 24, 120, 720, 5040 };
+    constexpr std::array<int, 10> factorial{ 1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880 };
 
     std::string debugColorName(const sf::Color& color) {
         if (color == sf::Color::Red) return "Red";
@@ -624,6 +624,68 @@ namespace Solver {
         }
 
         return ans;
+    }
+
+    auto generateCornerPermutationMoveTable() {
+        std::array<std::array<int, 10>, factorial[8]> table;
+        for (auto& row : table) row.fill(-1);
+
+        std::array<bool, factorial[8]> visited{};
+        int visitedCount{ 0 };
+
+
+        Cube cube{ 0.f };
+
+        const auto dfs{
+            [&](auto&& self, int coord, int depth) -> void {
+                if (coord < 0 || coord >= factorial[8]) {
+                    std::cout << "Invalid coord: " << coord << '\n';
+                    return;
+                }
+
+                std::cout << visitedCount << ' ' << coord << ' ' << depth << std::endl;
+
+                if (visited[coord]) return;
+                visited[coord] = true;
+                visitedCount++;
+
+                auto prevColors{ cube.faceColors };
+
+                for (int i = 0; i < 4; i++) {
+                    moveCube(cube, "FRLB"[i]);
+                    moveCube(cube, "FRLB"[i]);
+
+                    const int newCoord {getCornerPermutation(cube.faceColors)};
+                    table[coord][i] = newCoord;
+
+                    self(self, newCoord, depth + 1);
+
+                    moveCube(cube, "FRLB"[i]); // to reset
+                    moveCube(cube, "FRLB"[i]);
+                }
+
+                for (int i = 0; i < 2; i++) {
+                    for (int j = 0; j < 3; j++) {
+                        moveCube(cube, "UD"[i]);
+
+                        const int newCoord {getCornerPermutation(cube.faceColors)};
+                        table[coord][4 + i * 3 + j] = newCoord;
+
+                        self(self, newCoord, depth + 1);
+                    }
+                    moveCube(cube, "UD"[i]); // to reset
+                }
+            }
+        };
+
+        dfs(dfs, 0, 0);
+        std::cout << "Total visited: " << visitedCount << std::endl;
+
+        // Save binary
+        std::ofstream out("cornerPermutation2.bin", std::ios::binary);
+        out.write(reinterpret_cast<const char*>(table.data()), table.size() * sizeof(table[0]));
+
+        return table;
     }
 
     std::vector<char> solve(const Cube& cube) {
