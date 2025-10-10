@@ -628,7 +628,7 @@ namespace Solver {
     }
 
     auto generateCornerPermutationMoveTable() {
-        std::array<std::vector<int>, factorial[8]> table{};
+        std::array<std::array<int, 10>, factorial[8]> table{};
         std::array<bool, factorial[8]> visited{};
         int visitedCount{ 0 };
 
@@ -656,7 +656,7 @@ namespace Solver {
                 moveCube(cube, "FRLB"[i]);
                 moveCube(cube, "FRLB"[i]);
                 const int newCoord{ getCornerPermutation(cube.faceColors) };
-                table[coord].push_back(newCoord);
+                table[coord][i] = newCoord;
                 if (!visited[newCoord]) {
                     stk.push({ newCoord, cube.faceColors });
                 }
@@ -667,7 +667,7 @@ namespace Solver {
                 for (int j = 0; j < 3; j++) {
                     moveCube(cube, "UD"[i]);
                     const int newCoord{ getCornerPermutation(cube.faceColors) };
-                    table[coord].push_back(newCoord);
+                    table[coord][4 + i * 3 + j] = newCoord;
                     if (!visited[newCoord]) {
                         stk.push({ newCoord, cube.faceColors });
                     }
@@ -685,7 +685,7 @@ namespace Solver {
     }
 
     auto generateEdgePermutationMoveTable() {
-        std::array<std::vector<int>, factorial[8]> table{};
+        std::array<std::array<int, 10>, factorial[8]> table{};
         std::array<bool, factorial[8]> visited{};
         int visitedCount{ 0 };
 
@@ -713,7 +713,7 @@ namespace Solver {
                 moveCube(cube, "FRLB"[i]);
                 moveCube(cube, "FRLB"[i]);
                 const int newCoord{ getEdgePermutation(cube.faceColors) };
-                table[coord].push_back(newCoord);
+                table[coord][i] = newCoord;
                 if (!visited[newCoord]) {
                     stk.push({ newCoord, cube.faceColors });
                 }
@@ -724,7 +724,8 @@ namespace Solver {
                 for (int j = 0; j < 3; j++) {
                     moveCube(cube, "UD"[i]);
                     const int newCoord{ getEdgePermutation(cube.faceColors) };
-                    table[coord].push_back(newCoord);
+                    table[coord][4 + i * 3 + j] = newCoord;
+
                     if (!visited[newCoord]) {
                         stk.push({ newCoord, cube.faceColors });
                     }
@@ -742,7 +743,7 @@ namespace Solver {
     }
 
     auto generateUDPermutationMoveTable() {
-        std::array<std::vector<int>, 24> table{};
+        std::array<std::array<int, 10>, 24> table{};
         std::array<bool, 24> visited{};
         int visitedCount{ 0 };
 
@@ -770,7 +771,7 @@ namespace Solver {
                 moveCube(cube, "FRLB"[i]);
                 moveCube(cube, "FRLB"[i]);
                 const int newCoord{ getUDSlicePermutation(cube.faceColors) };
-                table[coord].push_back(newCoord);
+                table[coord][i] = newCoord;
                 if (!visited[newCoord]) {
                     stk.push({ newCoord, cube.faceColors });
                 }
@@ -781,7 +782,8 @@ namespace Solver {
                 for (int j = 0; j < 3; j++) {
                     moveCube(cube, "UD"[i]);
                     const int newCoord{ getUDSlicePermutation(cube.faceColors) };
-                    table[coord].push_back(newCoord);
+                    table[coord][4 + i * 3 + j] = newCoord;
+
                     if (!visited[newCoord]) {
                         stk.push({ newCoord, cube.faceColors });
                     }
@@ -796,6 +798,90 @@ namespace Solver {
         out.close();
 
         return table;
+    }
+
+    void generatePhase2PruneTable() {
+        // import move tables
+        std::array<std::array<int, 10>, factorial[8]> cornerTable;
+        std::ifstream in1("cornerPermutation2.bin", std::ios::binary);
+        in1.read(reinterpret_cast<char*>(cornerTable.data()), cornerTable.size() * sizeof(cornerTable[0]));
+        in1.close();
+
+        std::cout << "Corner table loaded\n" << cornerTable[0][0] << std::endl;
+        // read some values to verify
+        for (int i = 0; i < 10; i++) {
+            std::cout << cornerTable[0][i] << ' ';
+        }
+        std::cout << std::endl;
+        std::cout << cornerTable.size() << ' ' << cornerTable[0].size() << std::endl;
+
+        std::array<int, 40320> table{};
+        table.fill(-1);
+
+        std::vector<int> q;
+
+        table[0] = 0;
+        q.push_back(0);
+
+        int head{ 0 };
+
+        while (head < q.size()) {
+            int cur{ q[head++] };
+            int depth{ table[cur] };
+
+            for (int i = 0; i < 10; i++) {
+                const int nxt{ cornerTable[cur][i] };
+
+                if (table[nxt] == -1) {
+                    table[nxt] = depth + 1;
+                    q.push_back(nxt);
+                }
+            }
+
+            std::cout << head << ' ' << q.size() << '\n';
+        }
+
+        std::ofstream out("pruningTable2-1.bin", std::ios::binary);
+        out.write(reinterpret_cast<const char*>(table.data()), table.size() * sizeof(table[0]));
+        out.close();
+    }
+
+    void generatePhase2PruningTable2() {
+        // import move tables
+        std::array<std::array<int, 10>, factorial[8]> edgeTable;
+        std::ifstream in1("edgePermutation2.bin", std::ios::binary);
+        in1.read(reinterpret_cast<char*>(edgeTable.data()), edgeTable.size() * sizeof(edgeTable[0]));
+        in1.close();
+
+        std::array<int, 40320> table{};
+        table.fill(-1);
+
+        std::vector<int> q;
+
+        table[0] = 0;
+        q.push_back(0);
+
+        int head{ 0 };
+
+        while (head < q.size()) {
+            int cur{ q[head++] };
+            int depth{ table[cur] };
+
+            for (int i = 0; i < 10; i++) {
+                const int nxt{ edgeTable[cur][i] };
+
+                if (table[nxt] == -1) {
+                    table[nxt] = depth + 1;
+                    q.push_back(nxt);
+                }
+            }
+
+            std::cout << head << ' ' << q.size() << '\n';
+        }
+
+        std::ofstream out("pruningTable2-2.bin", std::ios::binary);
+        out.write(reinterpret_cast<const char*>(table.data()), table.size() * sizeof(table[0]));
+        out.close();
     }
 
     std::vector<char> solve(const Cube& cube) {

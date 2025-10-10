@@ -13,7 +13,7 @@ constexpr float rotationSpeed{ .1f };
 constexpr float faceRotationSpeed{ 500.f };
 constexpr float cubeletSize{ 2.f };
 
-int main2()
+int main()
 {
     Cube cube{ cubeletSize };
     Camera cam{ windowWidth, windowHeight };
@@ -67,12 +67,21 @@ int main2()
 
                     Solver::idaPhase1Search(cube);
                 }
+
+                else if (keyPressed->scancode == sf::Keyboard::Scancode::O && cube.getState() == Cube::IDLE) {
+                    // auto solution{ Solver::solve(cube) };
+                    // for (const auto& move : solution) {
+                    //     cube.startRotation(move);
+                    // }
+
+                    Solver::idaPhase2Search(cube);
+                }
             }
         }
 
-        if (cube.getState() == Cube::IDLE) {
-            std::cout << Solver::getCornerPermutation(cube.faceColors) << ' ' << Solver::getEdgePermutation(cube.faceColors) << ' ' << Solver::getUDSlicePermutation(cube.faceColors) << '\n';
-        }
+        // if (cube.getState() == Cube::IDLE) {
+        //     std::cout << Solver::getCornerPermutation(cube.faceColors) << ' ' << Solver::getEdgePermutation(cube.faceColors) << ' ' << Solver::getUDSlicePermutation(cube.faceColors) << '\n';
+        // }
 
         window.clear();
 
@@ -85,13 +94,10 @@ int main2()
     }
 }
 
-int main() {
-    auto table{ Solver::generateUDPermutationMoveTable() };
-
-    int empty{ 0 };
-    for (const auto& row : table) {
-        if (row.empty()) empty++;
-    }
-
-    std::cout << "Empty: " << empty << '\n';
+int main2() {
+    // Solver::generateCornerPermutationMoveTable();
+    // Solver::generateEdgePermutationMoveTable();
+    // Solver::generateUDPermutationMoveTable();
+    // Solver::generatePhase2PruneTable();
+    // Solver::generatePhase2PruningTable2();
 }
