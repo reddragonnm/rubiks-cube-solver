@@ -60,28 +60,14 @@ int main()
                     cube.shuffle(20);
 
                 else if (keyPressed->scancode == sf::Keyboard::Scancode::Enter && cube.getState() == Cube::IDLE) {
-                    // auto solution{ Solver::solve(cube) };
-                    // for (const auto& move : solution) {
-                    //     cube.startRotation(move);
-                    // }
+                    auto solution{ Solver::solve(cube) };
+                    for (const auto& move : solution) {
+                        cube.startRotation(move);
+                    }
 
-                    Solver::idaPhase1Search(cube);
-                }
-
-                else if (keyPressed->scancode == sf::Keyboard::Scancode::O && cube.getState() == Cube::IDLE) {
-                    // auto solution{ Solver::solve(cube) };
-                    // for (const auto& move : solution) {
-                    //     cube.startRotation(move);
-                    // }
-
-                    Solver::idaPhase2Search(cube);
                 }
             }
         }
-
-        // if (cube.getState() == Cube::IDLE) {
-        //     std::cout << Solver::getCornerPermutation(cube.faceColors) << ' ' << Solver::getEdgePermutation(cube.faceColors) << ' ' << Solver::getUDSlicePermutation(cube.faceColors) << '\n';
-        // }
 
         window.clear();
 
@@ -95,9 +81,5 @@ int main()
 }
 
 int main2() {
-    // Solver::generateCornerPermutationMoveTable();
-    // Solver::generateEdgePermutationMoveTable();
-    // Solver::generateUDPermutationMoveTable();
-    // Solver::generatePhase2PruneTable();
-    // Solver::generatePhase2PruningTable2();
+    Solver::generateAllTables();
 }

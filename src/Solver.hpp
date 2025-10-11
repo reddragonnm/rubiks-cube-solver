@@ -170,43 +170,44 @@ namespace Solver {
     }
 
     auto generateCornerOrientationMoveTable() {
-        std::array<std::array<int, 18>, 2187> table;
-        for (auto& row : table) row.fill(-1);
+        std::vector<int> table(2187 * 2048, -1);
 
-        std::array<bool, 2187> visited{};
+        std::vector<bool> visited(2187, false);
         int visitedCount{ 0 };
-
 
         Cube cube{ 0.f };
 
-        const auto dfs{
-            [&](auto&& self, int coord) -> void {
-                if (coord < 0 || coord >= 2187) {
-                    std::cout << "Invalid coord: " << coord << '\n';
-                    return;
-                }
+        std::vector<std::pair<int, FaceColors>> v{ {0, cube.faceColors} };
 
-                std::cout << visitedCount << ' ' << coord << '\n';
+        while (!v.empty()) {
+            auto [coord, colors] = v.back();
+            v.pop_back(); // dfs
 
-                if (visited[coord]) return;
-                visited[coord] = true;
-                visitedCount++;
+            if (coord < 0 || coord >= 2187) {
+                std::cout << "Invalid coord: " << coord << '\n';
+                break;
+            }
 
-                for (int i = 0; i < 6; i++) {
-                    for (int j = 0; j < 3; j++) {
+            std::cout << visitedCount << ' ' << coord << '\n';
+
+            if (visited[coord]) continue;
+            visited[coord] = true;
+            visitedCount++;
+
+            for (int i = 0; i < 6; i++) {
+                for (int j = 0; j < 3; j++) {
+                    cube.faceColors = colors;
+                    for (int k = 0; k < j + 1; k++) {
                         moveCube(cube, "FRBLUD"[i]);
-
-                        const int newCoord {getCornerOrientation(cube.faceColors)};
-                        table[coord][i * 3 + j] = newCoord;
-
-                        self(self, newCoord);
                     }
-                    moveCube(cube, "FRBLUD"[i]); // to reset
+
+                    const int newCoord{ getCornerOrientation(cube.faceColors) };
+                    table[coord * 18 + (i * 3 + j)] = newCoord;
+
+                    v.emplace_back(newCoord, cube.faceColors);
                 }
             }
-        };
-
-        dfs(dfs, 0);
+        }
 
         // Save binary
         std::ofstream out("cornerOrientation1.bin", std::ios::binary);
@@ -216,41 +217,43 @@ namespace Solver {
     }
 
     auto generateEdgeOrientationMoveTable() {
-        std::array<std::array<int, 18>, 2048> table;
-        std::array<bool, 2048> visited{};
+        std::vector<int> table(2048 * 18, -1);
+        std::vector<bool> visited(2048, false);
         int visitedCount{ 0 };
-
 
         Cube cube{ 0.f };
 
-        const auto dfs{
-            [&](auto&& self, int coord) -> void {
-                if (coord < 0 || coord >= 2048) {
-                    std::cout << "Invalid coord: " << coord << '\n';
-                    return;
-                }
+        std::vector<std::pair<int, FaceColors>> v{ {0, cube.faceColors} };
 
-                std::cout << visitedCount << ' ' << coord << '\n';
+        while (!v.empty()) {
+            auto [coord, colors] = v.back();
+            v.pop_back(); // dfs
 
-                if (visited[coord]) return;
-                visited[coord] = true;
-                visitedCount++;
+            if (coord < 0 || coord >= 2048) {
+                std::cout << "Invalid coord: " << coord << '\n';
+                break;
+            }
 
-                for (int i = 0; i < 6; i++) {
-                    for (int j = 0; j < 3; j++) {
+            std::cout << visitedCount << ' ' << coord << '\n';
+
+            if (visited[coord]) continue;
+            visited[coord] = true;
+            visitedCount++;
+
+            for (int i = 0; i < 6; i++) {
+                for (int j = 0; j < 3; j++) {
+                    cube.faceColors = colors;
+                    for (int k = 0; k < j + 1; k++) {
                         moveCube(cube, "FRBLUD"[i]);
-
-                        const int newCoord{ getEdgeOrientation(cube.faceColors) };
-                        table[coord][i * 3 + j] = newCoord;
-
-                        self(self, newCoord);
                     }
-                    moveCube(cube, "FRBLUD"[i]); // to reset
+
+                    const int newCoord{ getEdgeOrientation(cube.faceColors) };
+                    table[coord * 18 + (i * 3 + j)] = newCoord;
+
+                    v.emplace_back(newCoord, cube.faceColors);
                 }
             }
-        };
-
-        dfs(dfs, 0);
+        }
 
         // Save binary
         std::ofstream out("edgeOrientation1.bin", std::ios::binary);
@@ -260,41 +263,43 @@ namespace Solver {
     }
 
     auto generateUDSliceCoordinateTable() {
-        std::array<std::array<int, 18>, 495> table;
-        std::array<bool, 495> visited{};
+        std::vector<int> table(495 * 18, -1);
+        std::vector<bool> visited(495, false);
         int visitedCount{ 0 };
-
 
         Cube cube{ 0.f };
 
-        const auto dfs{
-            [&](auto&& self, int coord) -> void {
-                if (coord < 0 || coord >= 495) {
-                    std::cout << "Invalid coord: " << coord << '\n';
-                    return;
-                }
+        std::vector<std::pair<int, FaceColors>> v{ {0, cube.faceColors} };
 
-                std::cout << visitedCount << ' ' << coord << '\n';
+        while (!v.empty()) {
+            auto [coord, colors] = v.back();
+            v.pop_back(); // dfs
 
-                if (visited[coord]) return;
-                visited[coord] = true;
-                visitedCount++;
+            if (coord < 0 || coord >= 495) {
+                std::cout << "Invalid coord: " << coord << '\n';
+                break;
+            }
 
-                for (int i = 0; i < 6; i++) {
-                    for (int j = 0; j < 3; j++) {
+            std::cout << visitedCount << ' ' << coord << '\n';
+
+            if (visited[coord]) continue;
+            visited[coord] = true;
+            visitedCount++;
+
+            for (int i = 0; i < 6; i++) {
+                for (int j = 0; j < 3; j++) {
+                    cube.faceColors = colors;
+                    for (int k = 0; k < j + 1; k++) {
                         moveCube(cube, "FRBLUD"[i]);
-
-                        const int newCoord{ getUDSliceCoordinate(cube.faceColors) };
-                        table[coord][i * 3 + j] = newCoord;
-
-                        self(self, newCoord);
                     }
-                    moveCube(cube, "FRBLUD"[i]); // to reset
+
+                    const int newCoord{ getUDSliceCoordinate(cube.faceColors) };
+                    table[coord * 18 + (i * 3 + j)] = newCoord;
+
+                    v.emplace_back(newCoord, cube.faceColors);
                 }
             }
-        };
-
-        dfs(dfs, 0);
+        }
 
         // Save binary
         std::ofstream out("UDSliceCoordinate1.bin", std::ios::binary);
@@ -303,51 +308,45 @@ namespace Solver {
         return table;
     }
 
-    void generateAllMoveTables() {
-        generateCornerOrientationMoveTable();
-        generateEdgeOrientationMoveTable();
-        generateUDSliceCoordinateTable();
-    }
-
     auto generatePhase1PruneTable() {
-        std::vector<int> table(2187 * 2048, -1); std::vector<int> q;
-
-        std::array<std::array<int, 18>, 2187> cornerTable;
+        std::vector<int> cornerTable(2187 * 18, -1);
         std::ifstream in1("cornerOrientation1.bin", std::ios::binary);
         in1.read(reinterpret_cast<char*>(cornerTable.data()), cornerTable.size() * sizeof(cornerTable[0]));
         in1.close();
 
-        std::array<std::array<int, 18>, 2048> edgeTable;
+        std::vector<int> edgeTable(2048 * 18, -1);
         std::ifstream in2("edgeOrientation1.bin", std::ios::binary);
         in2.read(reinterpret_cast<char*>(edgeTable.data()), edgeTable.size() * sizeof(edgeTable[0]));
         in2.close();
 
         auto idx = [](int corner, int edge) -> int { return corner * 2048 + edge; };
 
+        std::vector<int> table(2187 * 2048, -1);
         table[idx(0, 0)] = 0;
-        q.push_back(idx(0, 0));
 
-        int head{ 0 };
+        std::vector<int> v{ idx(0, 0) };
 
-        while (head < q.size()) {
-            int cur{ q[head++] };
+        int head{ 0 }; // bfs
+
+        while (head < v.size()) {
+            int cur{ v[head++] };
             int curCorner{ cur / 2048 };
             int curEdge{ cur % 2048 };
             int depth{ table[cur] };
 
             for (int i = 0; i < 18; i++) {
-                const int nxtCorner{ cornerTable[curCorner][i] };
-                const int nxtEdge{ edgeTable[curEdge][i] };
+                const int nxtCorner{ cornerTable[curCorner * 18 + i] };
+                const int nxtEdge{ edgeTable[curEdge * 18 + i] };
                 const int nxt{ idx(nxtCorner, nxtEdge) };
 
                 if (table[nxt] == -1) {
                     table[nxt] = depth + 1;
-                    q.push_back(nxt);
+                    v.push_back(nxt);
                 }
             }
 
             if (head % 10000 == 0) {
-                std::cout << head << ' ' << q.size() << '\n';
+                std::cout << head << ' ' << v.size() << '\n';
             }
         }
 
@@ -359,71 +358,27 @@ namespace Solver {
         return table;
     }
 
-    int dfsPhase1(int corner, int edge, int udSlice, int g, int threshold, int lastMove, std::vector<int>& path, std::array<std::array<int, 18>, 2187>& cornerTable, std::array<std::array<int, 18>, 2048>& edgeTable, std::array<std::array<int, 18>, 495>& udSliceTable, std::vector<int>& pruneTable) {
-        static const std::map<int, int> oppFaces{
-            {0, 2},
-            {1, 3},
-            {2, 0},
-            {3, 1},
-            {4, 5},
-            {5, 4}
-        };
+    struct State {
+        int corner;
+        int edge;
+        int udSlice;
+        int g;
+        int threshold;
+        int lastMove;
+    };
 
-
-        int h{ pruneTable[corner * 2048 + edge] };
-        int f{ g + h };
-
-        if (f > threshold) return f;
-        if (corner == 0 && edge == 0 && udSlice == 0) {
-            // solution found
-            for (int move : path) {
-                std::cout << "FRBLUD"[move / 3];
-                if (move % 3 == 1) std::cout << "2";
-                else if (move % 3 == 2) std::cout << "'";
-                std::cout << ' ';
-            }
-            std::cout << '\n';
-            return -1;
-        }
-
-        int minOver{ 1 << 30 };
-
-        for (int move = 0; move < 18; move++) {
-            if (move / 3 == lastMove / 3) continue; // same face
-            if (oppFaces.at(move / 3) == lastMove / 3) continue; // opposite face
-
-            int newCorner{ cornerTable[corner][move] };
-            int newEdge{ edgeTable[edge][move] };
-            int newUDSlice{ udSliceTable[udSlice][move] };
-
-            int childH{ pruneTable[newCorner * 2048 + newEdge] };
-            if (g + 1 + childH > threshold) {
-                minOver = std::min(minOver, g + 1 + childH);
-                continue;
-            }
-
-            path.push_back(move);
-            int t{ dfsPhase1(newCorner, newEdge, newUDSlice, g + 1, threshold, move, path, cornerTable, edgeTable, udSliceTable, pruneTable) };
-            if (t == -1) return -1;
-            if (t < minOver) minOver = t;
-            path.pop_back();
-        }
-
-        return minOver;
-    }
-
-    void idaPhase1Search(const Cube& cube) {
-        std::array<std::array<int, 18>, 2187> cornerTable;
+    std::vector<int> idaPhase1Search(const Cube& cube) {
+        std::vector<int> cornerTable(2187 * 18, -1);
         std::ifstream in1("cornerOrientation1.bin", std::ios::binary);
         in1.read(reinterpret_cast<char*>(cornerTable.data()), cornerTable.size() * sizeof(cornerTable[0]));
         in1.close();
 
-        std::array<std::array<int, 18>, 2048> edgeTable;
+        std::vector<int> edgeTable(2048 * 18, -1);
         std::ifstream in2("edgeOrientation1.bin", std::ios::binary);
         in2.read(reinterpret_cast<char*>(edgeTable.data()), edgeTable.size() * sizeof(edgeTable[0]));
         in2.close();
 
-        std::array<std::array<int, 18>, 495> udSliceTable;
+        std::vector<int> udSliceTable(495 * 18, -1);
         std::ifstream in3("UDSliceCoordinate1.bin", std::ios::binary);
         in3.read(reinterpret_cast<char*>(udSliceTable.data()), udSliceTable.size() * sizeof(udSliceTable[0]));
         in3.close();
@@ -438,17 +393,59 @@ namespace Solver {
         int startUDSlice{ getUDSliceCoordinate(cube.faceColors) };
 
         int threshold{ std::max({ pruneTable[startCorner * 2048 + startEdge], 1 }) };
-        std::vector<int> path;
+        std::vector<int> path{};
+
+        static const std::map<int, int> oppFaces{
+                {0, 2},
+                {1, 3},
+                {2, 0},
+                {3, 1},
+                {4, 5},
+                {5, 4}
+        };
+
+        const auto dfsPhase1 = [&](auto&& self, State state) {
+            auto [corner, edge, udSlice, g, thresh, lastMove] = state;
+
+            int h{ pruneTable[corner * 2048 + edge] };
+            int f{ g + h };
+
+            if (f > thresh) return f;
+            if (corner == 0 && edge == 0 && udSlice == 0) return -1;
+
+            int minOver{ 1 << 30 };
+
+            for (int move = 0; move < 18; move++) {
+                if (move / 3 == lastMove / 3) continue; // same face
+                if (oppFaces.at(move / 3) == lastMove / 3) continue; // opposite face
+
+                int newCorner{ cornerTable[corner * 18 + move] };
+                int newEdge{ edgeTable[edge * 18 + move] };
+                int newUDSlice{ udSliceTable[udSlice * 18 + move] };
+
+                int childH{ pruneTable[newCorner * 2048 + newEdge] };
+                if (g + 1 + childH > thresh) {
+                    minOver = std::min(minOver, g + 1 + childH);
+                    continue;
+                }
+
+                path.push_back(move);
+                int t{ self(self, {newCorner, newEdge, newUDSlice, g + 1, thresh, move}) };
+                if (t == -1) return -1;
+                if (t < minOver) minOver = t;
+                path.pop_back();
+            }
+
+            return minOver;
+            };
 
         while (true) {
-            int nextThreshold{ dfsPhase1(startCorner, startEdge, startUDSlice, 0, threshold, -1, path, cornerTable, edgeTable, udSliceTable, pruneTable) };
-
-            std::cout << "Next threshold: " << nextThreshold << '\n';
+            int nextThreshold{ dfsPhase1(dfsPhase1, {startCorner, startEdge, startUDSlice, 0, threshold, -1}) };
 
             if (nextThreshold == -1) {
-                std::cout << "Solution found with " << path.size() << " moves\n";
-                break;
+                return path;
             }
+
             if (nextThreshold == (1 << 30)) {
                 std::cout << "No solution found\n";
                 break;
@@ -628,37 +625,37 @@ namespace Solver {
     }
 
     auto generateCornerPermutationMoveTable() {
-        std::array<std::array<int, 10>, factorial[8]> table{};
-        std::array<bool, factorial[8]> visited{};
+        std::vector<int> table(factorial[8] * 10, -1);
+        std::vector<bool> visited(factorial[8], false);
+
         int visitedCount{ 0 };
 
-        std::stack<std::pair<int, FaceColors>> stk;
         Cube cube{ 0.f };
-        stk.push({ 0, cube.faceColors });
+        std::vector<std::pair<int, FaceColors>> v{ {0, cube.faceColors} };
 
-        while (!stk.empty()) {
-            auto [coord, faceColors] = stk.top();
-            stk.pop();
+        int head{ 0 };
 
+        while (head < v.size()) {
+            auto [coord, faceColors] = v[head++];
             if (coord < 0 || coord >= factorial[8]) {
                 std::cout << "Invalid coord: " << coord << '\n';
                 continue;
             }
 
-            if (visited[coord]) continue;
+            std::cout << visitedCount << ' ' << coord << std::endl;
 
+            if (visited[coord]) continue;
             visited[coord] = true;
             visitedCount++;
-            std::cout << visitedCount << ' ' << coord << std::endl;
 
             for (int i = 0; i < 4; i++) {
                 cube.faceColors = faceColors;
-                moveCube(cube, "FRLB"[i]);
-                moveCube(cube, "FRLB"[i]);
+                moveCube(cube, "FRBL"[i]);
+                moveCube(cube, "FRBL"[i]);
                 const int newCoord{ getCornerPermutation(cube.faceColors) };
-                table[coord][i] = newCoord;
+                table[coord * 10 + i] = newCoord;
                 if (!visited[newCoord]) {
-                    stk.push({ newCoord, cube.faceColors });
+                    v.emplace_back(newCoord, cube.faceColors);
                 }
             }
 
@@ -667,9 +664,9 @@ namespace Solver {
                 for (int j = 0; j < 3; j++) {
                     moveCube(cube, "UD"[i]);
                     const int newCoord{ getCornerPermutation(cube.faceColors) };
-                    table[coord][4 + i * 3 + j] = newCoord;
+                    table[coord * 10 + (4 + i * 3 + j)] = newCoord;
                     if (!visited[newCoord]) {
-                        stk.push({ newCoord, cube.faceColors });
+                        v.emplace_back(newCoord, cube.faceColors);
                     }
                 }
             }
@@ -685,37 +682,37 @@ namespace Solver {
     }
 
     auto generateEdgePermutationMoveTable() {
-        std::array<std::array<int, 10>, factorial[8]> table{};
-        std::array<bool, factorial[8]> visited{};
+        std::vector<int> table(factorial[8] * 10, -1);
+        std::vector<bool> visited(factorial[8], false);
+
         int visitedCount{ 0 };
 
-        std::stack<std::pair<int, FaceColors>> stk;
         Cube cube{ 0.f };
-        stk.push({ 0, cube.faceColors });
+        std::vector<std::pair<int, FaceColors>> v{ {0, cube.faceColors} };
 
-        while (!stk.empty()) {
-            auto [coord, faceColors] = stk.top();
-            stk.pop();
+        int head{ 0 };
 
+        while (head < v.size()) {
+            auto [coord, faceColors] = v[head++];
             if (coord < 0 || coord >= factorial[8]) {
                 std::cout << "Invalid coord: " << coord << '\n';
                 continue;
             }
 
-            if (visited[coord]) continue;
+            std::cout << visitedCount << ' ' << coord << std::endl;
 
+            if (visited[coord]) continue;
             visited[coord] = true;
             visitedCount++;
-            std::cout << visitedCount << ' ' << coord << std::endl;
 
             for (int i = 0; i < 4; i++) {
                 cube.faceColors = faceColors;
-                moveCube(cube, "FRLB"[i]);
-                moveCube(cube, "FRLB"[i]);
+                moveCube(cube, "FRBL"[i]);
+                moveCube(cube, "FRBL"[i]);
                 const int newCoord{ getEdgePermutation(cube.faceColors) };
-                table[coord][i] = newCoord;
+                table[coord * 10 + i] = newCoord;
                 if (!visited[newCoord]) {
-                    stk.push({ newCoord, cube.faceColors });
+                    v.emplace_back(newCoord, cube.faceColors);
                 }
             }
 
@@ -724,10 +721,9 @@ namespace Solver {
                 for (int j = 0; j < 3; j++) {
                     moveCube(cube, "UD"[i]);
                     const int newCoord{ getEdgePermutation(cube.faceColors) };
-                    table[coord][4 + i * 3 + j] = newCoord;
-
+                    table[coord * 10 + (4 + i * 3 + j)] = newCoord;
                     if (!visited[newCoord]) {
-                        stk.push({ newCoord, cube.faceColors });
+                        v.emplace_back(newCoord, cube.faceColors);
                     }
                 }
             }
@@ -743,37 +739,37 @@ namespace Solver {
     }
 
     auto generateUDPermutationMoveTable() {
-        std::array<std::array<int, 10>, 24> table{};
-        std::array<bool, 24> visited{};
+        std::vector<int> table(24 * 10, -1);
+        std::vector<bool> visited(24, false);
+
         int visitedCount{ 0 };
 
-        std::stack<std::pair<int, FaceColors>> stk;
         Cube cube{ 0.f };
-        stk.push({ 0, cube.faceColors });
+        std::vector<std::pair<int, FaceColors>> v{ {0, cube.faceColors} };
 
-        while (!stk.empty()) {
-            auto [coord, faceColors] = stk.top();
-            stk.pop();
+        int head{ 0 };
 
+        while (head < v.size()) {
+            auto [coord, faceColors] = v[head++];
             if (coord < 0 || coord >= 24) {
                 std::cout << "Invalid coord: " << coord << '\n';
                 continue;
             }
 
-            if (visited[coord]) continue;
+            std::cout << visitedCount << ' ' << coord << std::endl;
 
+            if (visited[coord]) continue;
             visited[coord] = true;
             visitedCount++;
-            std::cout << visitedCount << ' ' << coord << std::endl;
 
             for (int i = 0; i < 4; i++) {
                 cube.faceColors = faceColors;
-                moveCube(cube, "FRLB"[i]);
-                moveCube(cube, "FRLB"[i]);
+                moveCube(cube, "FRBL"[i]);
+                moveCube(cube, "FRBL"[i]);
                 const int newCoord{ getUDSlicePermutation(cube.faceColors) };
-                table[coord][i] = newCoord;
+                table[coord * 10 + i] = newCoord;
                 if (!visited[newCoord]) {
-                    stk.push({ newCoord, cube.faceColors });
+                    v.emplace_back(newCoord, cube.faceColors);
                 }
             }
 
@@ -782,10 +778,9 @@ namespace Solver {
                 for (int j = 0; j < 3; j++) {
                     moveCube(cube, "UD"[i]);
                     const int newCoord{ getUDSlicePermutation(cube.faceColors) };
-                    table[coord][4 + i * 3 + j] = newCoord;
-
+                    table[coord * 10 + (4 + i * 3 + j)] = newCoord;
                     if (!visited[newCoord]) {
-                        stk.push({ newCoord, cube.faceColors });
+                        v.emplace_back(newCoord, cube.faceColors);
                     }
                 }
             }
@@ -802,27 +797,15 @@ namespace Solver {
 
     void generatePhase2PruneTable() {
         // import move tables
-        std::array<std::array<int, 10>, factorial[8]> cornerTable;
+        std::vector<int> cornerTable(factorial[8] * 10, -1);
         std::ifstream in1("cornerPermutation2.bin", std::ios::binary);
         in1.read(reinterpret_cast<char*>(cornerTable.data()), cornerTable.size() * sizeof(cornerTable[0]));
         in1.close();
 
-        std::cout << "Corner table loaded\n" << cornerTable[0][0] << std::endl;
-        // read some values to verify
-        for (int i = 0; i < 10; i++) {
-            std::cout << cornerTable[0][i] << ' ';
-        }
-        std::cout << std::endl;
-        std::cout << cornerTable.size() << ' ' << cornerTable[0].size() << std::endl;
-
-        std::array<int, 40320> table{};
-        table.fill(-1);
-
-        std::vector<int> q;
+        std::vector<int> table(40320, -1);
+        std::vector<int> q{ 0 };
 
         table[0] = 0;
-        q.push_back(0);
-
         int head{ 0 };
 
         while (head < q.size()) {
@@ -830,7 +813,7 @@ namespace Solver {
             int depth{ table[cur] };
 
             for (int i = 0; i < 10; i++) {
-                const int nxt{ cornerTable[cur][i] };
+                const int nxt{ cornerTable[cur * 10 + i] };
 
                 if (table[nxt] == -1) {
                     table[nxt] = depth + 1;
@@ -848,14 +831,12 @@ namespace Solver {
 
     void generatePhase2PruningTable2() {
         // import move tables
-        std::array<std::array<int, 10>, factorial[8]> edgeTable;
+        std::vector<int> edgeTable(factorial[8] * 10, -1);
         std::ifstream in1("edgePermutation2.bin", std::ios::binary);
         in1.read(reinterpret_cast<char*>(edgeTable.data()), edgeTable.size() * sizeof(edgeTable[0]));
         in1.close();
 
-        std::array<int, 40320> table{};
-        table.fill(-1);
-
+        std::vector<int> table(40320, -1);
         std::vector<int> q;
 
         table[0] = 0;
@@ -868,7 +849,7 @@ namespace Solver {
             int depth{ table[cur] };
 
             for (int i = 0; i < 10; i++) {
-                const int nxt{ edgeTable[cur][i] };
+                const int nxt{ edgeTable[cur * 10 + i] };
 
                 if (table[nxt] == -1) {
                     table[nxt] = depth + 1;
@@ -884,7 +865,138 @@ namespace Solver {
         out.close();
     }
 
+    void generateAllTables() {
+        generateCornerOrientationMoveTable();
+        generateEdgeOrientationMoveTable();
+        generateUDSliceCoordinateTable();
+        generatePhase1PruneTable();
+
+        generateCornerPermutationMoveTable();
+        generateEdgePermutationMoveTable();
+        generateUDPermutationMoveTable();
+        generatePhase2PruneTable();
+        generatePhase2PruningTable2();
+    }
+
+    std::vector<int> idaPhase2Search(const Cube& cube) {
+        std::vector<int> cornerTable(factorial[8] * 10, -1);
+        std::ifstream in1("cornerPermutation2.bin", std::ios::binary);
+        in1.read(reinterpret_cast<char*>(cornerTable.data()), cornerTable.size() * sizeof(cornerTable[0]));
+        in1.close();
+
+        std::vector<int> edgeTable(factorial[8] * 10, -1);
+        std::ifstream in2("edgePermutation2.bin", std::ios::binary);
+        in2.read(reinterpret_cast<char*>(edgeTable.data()), edgeTable.size() * sizeof(edgeTable[0]));
+        in2.close();
+
+        std::vector<int> udSliceTable(24 * 10, -1);
+        std::ifstream in3("UDPermutation2.bin", std::ios::binary);
+        in3.read(reinterpret_cast<char*>(udSliceTable.data()), udSliceTable.size() * sizeof(udSliceTable[0]));
+        in3.close();
+
+        std::vector<int> pruneTable1(factorial[8], -1);
+        std::ifstream in4("pruningTable2-1.bin", std::ios::binary);
+        in4.read(reinterpret_cast<char*>(pruneTable1.data()), pruneTable1.size() * sizeof(pruneTable1[0]));
+        in4.close();
+
+        std::vector<int> pruneTable2(factorial[8], -1);
+        std::ifstream in5("pruningTable2-2.bin", std::ios::binary);
+        in5.read(reinterpret_cast<char*>(pruneTable2.data()), pruneTable2.size() * sizeof(pruneTable2[0]));
+        in5.close();
+
+        int startCorner{ getCornerPermutation(cube.faceColors) };
+        int startEdge{ getEdgePermutation(cube.faceColors) };
+        int startUDSlice{ getUDSlicePermutation(cube.faceColors) };
+
+        int threshold{ std::max({ pruneTable1[startCorner], pruneTable2[startEdge], 1 }) };
+        std::vector<int> path{};
+
+        const auto dfs = [&](auto&& self, State state) {
+            auto [corner, edge, udSlice, g, thresh, lastMove] = state;
+
+            int h{ std::max({pruneTable1[corner], pruneTable2[edge]}) };
+            int f{ g + h };
+
+            if (f > thresh) return f;
+            if (corner == 0 && edge == 0 && udSlice == 0) return -1;
+
+
+            int minOver{ 1 << 30 };
+
+            for (int move = 0; move < 10; move++) {
+                if (move < 4 && lastMove == move) continue; // same face
+                if (move >= 4 && lastMove >= 4 && (move - 4) / 3 == (lastMove - 4) / 3) continue; // same face
+
+                if ((move == 0 && lastMove == 2) || (move == 2 && lastMove == 0) || (move == 1 && lastMove == 3) || (move == 3 && lastMove == 1)) continue; // opposite face
+                if (move >= 4 && lastMove >= 4 && (((move - 4) / 3 == 0 && (lastMove - 4) / 3 == 1) || ((move - 4) / 3 == 1 && (lastMove - 4) / 3 == 0))) continue; // opposite face
+
+                int newCorner{ cornerTable[corner * 10 + move] };
+                int newEdge{ edgeTable[edge * 10 + move] };
+                int newUDSlice{ udSliceTable[udSlice * 10 + move] };
+
+                int childH{ std::max({pruneTable1[newCorner], pruneTable2[newEdge]}) };
+                if (g + 1 + childH > thresh) {
+                    minOver = std::min(minOver, g + 1 + childH);
+                    continue;
+                }
+
+                path.push_back(move);
+                int t{ self(self, {newCorner, newEdge, newUDSlice, g + 1, thresh, move}) };
+                if (t == -1) return -1;
+                if (t < minOver) minOver = t;
+                path.pop_back();
+            }
+
+            return minOver;
+            };
+
+        while (true) {
+            int nextThreshold{ dfs(dfs, {startCorner, startEdge, startUDSlice, 0, threshold, -1}) };
+
+            if (nextThreshold == -1) {
+                return path;
+            }
+
+            if (nextThreshold == (1 << 30)) {
+                std::cout << "No solution found\n";
+                break;
+            }
+
+            threshold = nextThreshold;
+        }
+    }
+
     std::vector<char> solve(const Cube& cube) {
-        return {};
+        std::vector<char> moves{};
+
+        Cube tempCube{ cube };
+        int length{ 0 };
+
+        for (int move : idaPhase1Search(cube)) {
+            length++;
+            for (int i = 0; i < (move % 3) + 1; i++) {
+                moves.push_back("FRBLUD"[move / 3]);
+                moveCube(tempCube, "FRBLUD"[move / 3]);
+            }
+        }
+
+        for (int move : idaPhase2Search(tempCube)) {
+            length++;
+            if (move < 4) {
+                for (int i = 0; i < 2; i++) {
+                    moves.push_back("FRBL"[move]);
+                    moveCube(tempCube, "FRBL"[move]);
+                }
+            }
+            else {
+                for (int i = 0; i < (move - 4) % 3 + 1; i++) {
+                    moves.push_back("UD"[(move - 4) / 3]);
+                    moveCube(tempCube, "UD"[(move - 4) / 3]);
+                }
+            }
+        }
+
+        std::cout << "Solution length: " << length << '\n';
+        return moves;
     }
 }
