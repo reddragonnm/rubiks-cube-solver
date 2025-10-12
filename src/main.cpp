@@ -80,6 +80,7 @@ int main()
     }
 }
 
-int main2() {
+int main2()
+{
     Solver::generateAllTables();
 }

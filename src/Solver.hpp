@@ -8,6 +8,7 @@
 #include <string>
 #include <map>
 #include <stack>
+#include <functional>
 
 #include <algorithm>
 #include <filesystem>
@@ -169,10 +170,9 @@ namespace Solver {
         else if (move == 'B') cube.B();
     }
 
-    auto generateCornerOrientationMoveTable() {
-        std::vector<int> table(2187 * 2048, -1);
-
-        std::vector<bool> visited(2187, false);
+    void generateMoveTablePhase1(int length, std::function<int(FaceColors)> coordFunc, std::string filename) {
+        std::vector<int> table(length * 18, -1);
+        std::vector<bool> visited(length, false);
         int visitedCount{ 0 };
 
         Cube cube{ 0.f };
@@ -183,7 +183,7 @@ namespace Solver {
             auto [coord, colors] = v.back();
             v.pop_back(); // dfs
 
-            if (coord < 0 || coord >= 2187) {
+            if (coord < 0 || coord >= length) {
                 std::cout << "Invalid coord: " << coord << '\n';
                 break;
             }
@@ -201,7 +201,7 @@ namespace Solver {
                         moveCube(cube, "FRBLUD"[i]);
                     }
 
-                    const int newCoord{ getCornerOrientation(cube.faceColors) };
+                    const int newCoord{ coordFunc(cube.faceColors) };
                     table[coord * 18 + (i * 3 + j)] = newCoord;
 
                     v.emplace_back(newCoord, cube.faceColors);
@@ -210,105 +210,11 @@ namespace Solver {
         }
 
         // Save binary
-        std::ofstream out("cornerOrientation1.bin", std::ios::binary);
+        std::ofstream out(filename.c_str(), std::ios::binary);
         out.write(reinterpret_cast<const char*>(table.data()), table.size() * sizeof(table[0]));
-
-        return table;
     }
 
-    auto generateEdgeOrientationMoveTable() {
-        std::vector<int> table(2048 * 18, -1);
-        std::vector<bool> visited(2048, false);
-        int visitedCount{ 0 };
-
-        Cube cube{ 0.f };
-
-        std::vector<std::pair<int, FaceColors>> v{ {0, cube.faceColors} };
-
-        while (!v.empty()) {
-            auto [coord, colors] = v.back();
-            v.pop_back(); // dfs
-
-            if (coord < 0 || coord >= 2048) {
-                std::cout << "Invalid coord: " << coord << '\n';
-                break;
-            }
-
-            std::cout << visitedCount << ' ' << coord << '\n';
-
-            if (visited[coord]) continue;
-            visited[coord] = true;
-            visitedCount++;
-
-            for (int i = 0; i < 6; i++) {
-                for (int j = 0; j < 3; j++) {
-                    cube.faceColors = colors;
-                    for (int k = 0; k < j + 1; k++) {
-                        moveCube(cube, "FRBLUD"[i]);
-                    }
-
-                    const int newCoord{ getEdgeOrientation(cube.faceColors) };
-                    table[coord * 18 + (i * 3 + j)] = newCoord;
-
-                    v.emplace_back(newCoord, cube.faceColors);
-                }
-            }
-        }
-
-        // Save binary
-        std::ofstream out("edgeOrientation1.bin", std::ios::binary);
-        out.write(reinterpret_cast<const char*>(table.data()), table.size() * sizeof(table[0]));
-
-        return table;
-    }
-
-    auto generateUDSliceCoordinateTable() {
-        std::vector<int> table(495 * 18, -1);
-        std::vector<bool> visited(495, false);
-        int visitedCount{ 0 };
-
-        Cube cube{ 0.f };
-
-        std::vector<std::pair<int, FaceColors>> v{ {0, cube.faceColors} };
-
-        while (!v.empty()) {
-            auto [coord, colors] = v.back();
-            v.pop_back(); // dfs
-
-            if (coord < 0 || coord >= 495) {
-                std::cout << "Invalid coord: " << coord << '\n';
-                break;
-            }
-
-            std::cout << visitedCount << ' ' << coord << '\n';
-
-            if (visited[coord]) continue;
-            visited[coord] = true;
-            visitedCount++;
-
-            for (int i = 0; i < 6; i++) {
-                for (int j = 0; j < 3; j++) {
-                    cube.faceColors = colors;
-                    for (int k = 0; k < j + 1; k++) {
-                        moveCube(cube, "FRBLUD"[i]);
-                    }
-
-                    const int newCoord{ getUDSliceCoordinate(cube.faceColors) };
-                    table[coord * 18 + (i * 3 + j)] = newCoord;
-
-                    v.emplace_back(newCoord, cube.faceColors);
-                }
-            }
-        }
-
-        // Save binary
-        std::ofstream out("UDSliceCoordinate1.bin", std::ios::binary);
-        out.write(reinterpret_cast<const char*>(table.data()), table.size() * sizeof(table[0]));
-
-        return table;
-    }
-
-    auto generatePhase1PruneTable() {
+    void generatePhase1PruneTable() {
         std::vector<int> cornerTable(2187 * 18, -1);
         std::ifstream in1("cornerOrientation1.bin", std::ios::binary);
         in1.read(reinterpret_cast<char*>(cornerTable.data()), cornerTable.size() * sizeof(cornerTable[0]));
@@ -354,8 +260,6 @@ namespace Solver {
         std::cout << "Max depth: " << maxDepth << '\n';
         std::ofstream out("pruningTable1.bin", std::ios::binary);
         out.write(reinterpret_cast<const char*>(table.data()), table.size() * sizeof(table[0]));
-
-        return table;
     }
 
     struct State {
@@ -624,20 +528,21 @@ namespace Solver {
         return ans;
     }
 
-    auto generateCornerPermutationMoveTable() {
-        std::vector<int> table(factorial[8] * 10, -1);
-        std::vector<bool> visited(factorial[8], false);
 
+    void generateMoveTablePhase2(int length, std::function<int(FaceColors)> coordFunc, std::string filename) {
+        std::vector<int> table(length * 10, -1);
+        std::vector<bool> visited(length, false);
         int visitedCount{ 0 };
 
         Cube cube{ 0.f };
+
         std::vector<std::pair<int, FaceColors>> v{ {0, cube.faceColors} };
 
         int head{ 0 };
 
         while (head < v.size()) {
-            auto [coord, faceColors] = v[head++];
-            if (coord < 0 || coord >= factorial[8]) {
+            auto [coord, colors] = v[head++];
+            if (coord < 0 || coord >= length) {
                 std::cout << "Invalid coord: " << coord << '\n';
                 continue;
             }
@@ -649,10 +554,10 @@ namespace Solver {
             visitedCount++;
 
             for (int i = 0; i < 4; i++) {
-                cube.faceColors = faceColors;
+                cube.faceColors = colors;
                 moveCube(cube, "FRBL"[i]);
                 moveCube(cube, "FRBL"[i]);
-                const int newCoord{ getCornerPermutation(cube.faceColors) };
+                const int newCoord{ coordFunc(cube.faceColors) };
                 table[coord * 10 + i] = newCoord;
                 if (!visited[newCoord]) {
                     v.emplace_back(newCoord, cube.faceColors);
@@ -660,10 +565,10 @@ namespace Solver {
             }
 
             for (int i = 0; i < 2; i++) {
-                cube.faceColors = faceColors;
+                cube.faceColors = colors;
                 for (int j = 0; j < 3; j++) {
                     moveCube(cube, "UD"[i]);
-                    const int newCoord{ getCornerPermutation(cube.faceColors) };
+                    const int newCoord{ coordFunc(cube.faceColors) };
                     table[coord * 10 + (4 + i * 3 + j)] = newCoord;
                     if (!visited[newCoord]) {
                         v.emplace_back(newCoord, cube.faceColors);
@@ -673,126 +578,8 @@ namespace Solver {
         }
 
         // Save binary
-        std::ofstream out("cornerPermutation2.bin", std::ios::binary);
-        out.write(reinterpret_cast<const char*>(table.data()),
-            table.size() * sizeof(table[0]));
-        out.close();
-
-        return table;
-    }
-
-    auto generateEdgePermutationMoveTable() {
-        std::vector<int> table(factorial[8] * 10, -1);
-        std::vector<bool> visited(factorial[8], false);
-
-        int visitedCount{ 0 };
-
-        Cube cube{ 0.f };
-        std::vector<std::pair<int, FaceColors>> v{ {0, cube.faceColors} };
-
-        int head{ 0 };
-
-        while (head < v.size()) {
-            auto [coord, faceColors] = v[head++];
-            if (coord < 0 || coord >= factorial[8]) {
-                std::cout << "Invalid coord: " << coord << '\n';
-                continue;
-            }
-
-            std::cout << visitedCount << ' ' << coord << std::endl;
-
-            if (visited[coord]) continue;
-            visited[coord] = true;
-            visitedCount++;
-
-            for (int i = 0; i < 4; i++) {
-                cube.faceColors = faceColors;
-                moveCube(cube, "FRBL"[i]);
-                moveCube(cube, "FRBL"[i]);
-                const int newCoord{ getEdgePermutation(cube.faceColors) };
-                table[coord * 10 + i] = newCoord;
-                if (!visited[newCoord]) {
-                    v.emplace_back(newCoord, cube.faceColors);
-                }
-            }
-
-            for (int i = 0; i < 2; i++) {
-                cube.faceColors = faceColors;
-                for (int j = 0; j < 3; j++) {
-                    moveCube(cube, "UD"[i]);
-                    const int newCoord{ getEdgePermutation(cube.faceColors) };
-                    table[coord * 10 + (4 + i * 3 + j)] = newCoord;
-                    if (!visited[newCoord]) {
-                        v.emplace_back(newCoord, cube.faceColors);
-                    }
-                }
-            }
-        }
-
-        // Save binary
-        std::ofstream out("edgePermutation2.bin", std::ios::binary);
-        out.write(reinterpret_cast<const char*>(table.data()),
-            table.size() * sizeof(table[0]));
-        out.close();
-
-        return table;
-    }
-
-    auto generateUDPermutationMoveTable() {
-        std::vector<int> table(24 * 10, -1);
-        std::vector<bool> visited(24, false);
-
-        int visitedCount{ 0 };
-
-        Cube cube{ 0.f };
-        std::vector<std::pair<int, FaceColors>> v{ {0, cube.faceColors} };
-
-        int head{ 0 };
-
-        while (head < v.size()) {
-            auto [coord, faceColors] = v[head++];
-            if (coord < 0 || coord >= 24) {
-                std::cout << "Invalid coord: " << coord << '\n';
-                continue;
-            }
-
-            std::cout << visitedCount << ' ' << coord << std::endl;
-
-            if (visited[coord]) continue;
-            visited[coord] = true;
-            visitedCount++;
-
-            for (int i = 0; i < 4; i++) {
-                cube.faceColors = faceColors;
-                moveCube(cube, "FRBL"[i]);
-                moveCube(cube, "FRBL"[i]);
-                const int newCoord{ getUDSlicePermutation(cube.faceColors) };
-                table[coord * 10 + i] = newCoord;
-                if (!visited[newCoord]) {
-                    v.emplace_back(newCoord, cube.faceColors);
-                }
-            }
-
-            for (int i = 0; i < 2; i++) {
-                cube.faceColors = faceColors;
-                for (int j = 0; j < 3; j++) {
-                    moveCube(cube, "UD"[i]);
-                    const int newCoord{ getUDSlicePermutation(cube.faceColors) };
-                    table[coord * 10 + (4 + i * 3 + j)] = newCoord;
-                    if (!visited[newCoord]) {
-                        v.emplace_back(newCoord, cube.faceColors);
-                    }
-                }
-            }
-        }
-
-        // Save binary
-        std::ofstream out("UDPermutation2.bin", std::ios::binary);
-        out.write(reinterpret_cast<const char*>(table.data()),
-            table.size() * sizeof(table[0]));
-        out.close();
-
-        return table;
+        std::ofstream out(filename.c_str(), std::ios::binary);
+        out.write(reinterpret_cast<const char*>(table.data()), table.size() * sizeof(table[0]));
     }
 
     void generatePhase2PruneTable() {
@@ -866,14 +653,16 @@ namespace Solver {
     }
 
     void generateAllTables() {
-        generateCornerOrientationMoveTable();
-        generateEdgeOrientationMoveTable();
-        generateUDSliceCoordinateTable();
+        generateMoveTablePhase1(2187, getCornerOrientation, "cornerOrientation1.bin");
+        generateMoveTablePhase1(2048, getEdgeOrientation, "edgeOrientation1.bin");
+        generateMoveTablePhase1(495, getUDSliceCoordinate, "UDSliceCoordinate1.bin");
+
         generatePhase1PruneTable();
 
-        generateCornerPermutationMoveTable();
-        generateEdgePermutationMoveTable();
-        generateUDPermutationMoveTable();
+        generateMoveTablePhase2(factorial[8], getCornerPermutation, "cornerPermutation2.bin");
+        generateMoveTablePhase2(factorial[8], getEdgePermutation, "edgePermutation2.bin");
+        generateMoveTablePhase2(24, getUDSlicePermutation, "UDPermutation2.bin");
+
         generatePhase2PruneTable();
         generatePhase2PruningTable2();
     }
