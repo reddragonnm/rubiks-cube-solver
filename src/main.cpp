@@ -79,8 +79,3 @@ int main()
         window.display();
     }
 }
-
-int main2()
-{
-    Solver::generateAllTables();
-}

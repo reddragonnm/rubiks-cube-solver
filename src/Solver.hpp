@@ -90,6 +90,15 @@ namespace Solver {
         {2, 0}
     } };
 
+    std::vector<int> loadTable(const std::string& filename, int length) {
+        std::vector<int> table(length);
+        std::ifstream in(filename.c_str(), std::ios::binary);
+        in.read(reinterpret_cast<char*>(table.data()), table.size() * sizeof(table[0]));
+        in.close();
+
+        return table;
+    }
+
     constexpr std::array<std::pair<int, int>, 4> edgePositions{ {
         {0, 1},
         {1, 2},
@@ -215,15 +224,8 @@ namespace Solver {
     }
 
     void generatePhase1PruneTable() {
-        std::vector<int> cornerTable(2187 * 18, -1);
-        std::ifstream in1("cornerOrientation1.bin", std::ios::binary);
-        in1.read(reinterpret_cast<char*>(cornerTable.data()), cornerTable.size() * sizeof(cornerTable[0]));
-        in1.close();
-
-        std::vector<int> edgeTable(2048 * 18, -1);
-        std::ifstream in2("edgeOrientation1.bin", std::ios::binary);
-        in2.read(reinterpret_cast<char*>(edgeTable.data()), edgeTable.size() * sizeof(edgeTable[0]));
-        in2.close();
+        auto cornerTable = loadTable("cornerOrientation1.bin", 2187 * 18);
+        auto edgeTable = loadTable("edgeOrientation1.bin", 2048 * 18);
 
         auto idx = [](int corner, int edge) -> int { return corner * 2048 + edge; };
 
@@ -272,25 +274,10 @@ namespace Solver {
     };
 
     std::vector<int> idaPhase1Search(const Cube& cube) {
-        std::vector<int> cornerTable(2187 * 18, -1);
-        std::ifstream in1("cornerOrientation1.bin", std::ios::binary);
-        in1.read(reinterpret_cast<char*>(cornerTable.data()), cornerTable.size() * sizeof(cornerTable[0]));
-        in1.close();
-
-        std::vector<int> edgeTable(2048 * 18, -1);
-        std::ifstream in2("edgeOrientation1.bin", std::ios::binary);
-        in2.read(reinterpret_cast<char*>(edgeTable.data()), edgeTable.size() * sizeof(edgeTable[0]));
-        in2.close();
-
-        std::vector<int> udSliceTable(495 * 18, -1);
-        std::ifstream in3("UDSliceCoordinate1.bin", std::ios::binary);
-        in3.read(reinterpret_cast<char*>(udSliceTable.data()), udSliceTable.size() * sizeof(udSliceTable[0]));
-        in3.close();
-
-        std::vector<int> pruneTable(2187 * 2048);
-        std::ifstream in4("pruningTable1.bin", std::ios::binary);
-        in4.read(reinterpret_cast<char*>(pruneTable.data()), pruneTable.size() * sizeof(pruneTable[0]));
-        in4.close();
+        auto cornerTable = loadTable("cornerOrientation1.bin", 2187 * 18);
+        auto edgeTable = loadTable("edgeOrientation1.bin", 2048 * 18);
+        auto udSliceTable = loadTable("UDSliceCoordinate1.bin", 495 * 18);
+        auto pruneTable = loadTable("pruningTable1.bin", 2187 * 2048);
 
         int startCorner{ getCornerOrientation(cube.faceColors) };
         int startEdge{ getEdgeOrientation(cube.faceColors) };
@@ -357,6 +344,8 @@ namespace Solver {
 
             threshold = nextThreshold;
         }
+
+        return {};
     }
 
     bool isSameCorner(std::array<sf::Color, 3> a, std::array<sf::Color, 3> b) {
@@ -583,11 +572,7 @@ namespace Solver {
     }
 
     void generatePhase2PruneTable() {
-        // import move tables
-        std::vector<int> cornerTable(factorial[8] * 10, -1);
-        std::ifstream in1("cornerPermutation2.bin", std::ios::binary);
-        in1.read(reinterpret_cast<char*>(cornerTable.data()), cornerTable.size() * sizeof(cornerTable[0]));
-        in1.close();
+        auto cornerTable = loadTable("cornerPermutation2.bin", factorial[8] * 10);
 
         std::vector<int> table(40320, -1);
         std::vector<int> q{ 0 };
@@ -617,11 +602,7 @@ namespace Solver {
     }
 
     void generatePhase2PruningTable2() {
-        // import move tables
-        std::vector<int> edgeTable(factorial[8] * 10, -1);
-        std::ifstream in1("edgePermutation2.bin", std::ios::binary);
-        in1.read(reinterpret_cast<char*>(edgeTable.data()), edgeTable.size() * sizeof(edgeTable[0]));
-        in1.close();
+        auto edgeTable = loadTable("edgePermutation2.bin", factorial[8] * 10);
 
         std::vector<int> table(40320, -1);
         std::vector<int> q;
@@ -668,30 +649,11 @@ namespace Solver {
     }
 
     std::vector<int> idaPhase2Search(const Cube& cube) {
-        std::vector<int> cornerTable(factorial[8] * 10, -1);
-        std::ifstream in1("cornerPermutation2.bin", std::ios::binary);
-        in1.read(reinterpret_cast<char*>(cornerTable.data()), cornerTable.size() * sizeof(cornerTable[0]));
-        in1.close();
-
-        std::vector<int> edgeTable(factorial[8] * 10, -1);
-        std::ifstream in2("edgePermutation2.bin", std::ios::binary);
-        in2.read(reinterpret_cast<char*>(edgeTable.data()), edgeTable.size() * sizeof(edgeTable[0]));
-        in2.close();
-
-        std::vector<int> udSliceTable(24 * 10, -1);
-        std::ifstream in3("UDPermutation2.bin", std::ios::binary);
-        in3.read(reinterpret_cast<char*>(udSliceTable.data()), udSliceTable.size() * sizeof(udSliceTable[0]));
-        in3.close();
-
-        std::vector<int> pruneTable1(factorial[8], -1);
-        std::ifstream in4("pruningTable2-1.bin", std::ios::binary);
-        in4.read(reinterpret_cast<char*>(pruneTable1.data()), pruneTable1.size() * sizeof(pruneTable1[0]));
-        in4.close();
-
-        std::vector<int> pruneTable2(factorial[8], -1);
-        std::ifstream in5("pruningTable2-2.bin", std::ios::binary);
-        in5.read(reinterpret_cast<char*>(pruneTable2.data()), pruneTable2.size() * sizeof(pruneTable2[0]));
-        in5.close();
+        auto cornerTable = loadTable("cornerPermutation2.bin", factorial[8] * 10);
+        auto edgeTable = loadTable("edgePermutation2.bin", factorial[8] * 10);
+        auto udSliceTable = loadTable("UDPermutation2.bin", 24 * 10);
+        auto pruneTable1 = loadTable("pruningTable2-1.bin", factorial[8]);
+        auto pruneTable2 = loadTable("pruningTable2-2.bin", factorial[8]);
 
         int startCorner{ getCornerPermutation(cube.faceColors) };
         int startEdge{ getEdgePermutation(cube.faceColors) };
@@ -753,6 +715,8 @@ namespace Solver {
 
             threshold = nextThreshold;
         }
+
+        return {};
     }
 
     std::vector<char> solve(const Cube& cube) {
