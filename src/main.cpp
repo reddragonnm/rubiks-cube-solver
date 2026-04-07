@@ -20,10 +20,12 @@ int main()
 
     sf::ContextSettings settings;
     settings.antiAliasingLevel = 8;
-    auto window{ sf::RenderWindow(sf::VideoMode({ windowWidth, windowHeight}), "Rubik's Cube", sf::Style::Default, sf::State::Windowed, settings) };
+    auto window{ sf::RenderWindow(sf::VideoMode({ windowWidth, windowHeight}), "SFML", sf::Style::Default, sf::State::Windowed, settings) };
 
     static sf::Clock clock;
     static float frameTime{ 0.f };
+
+    // Solver::generateAllTables();
 
     while (window.isOpen())
     {

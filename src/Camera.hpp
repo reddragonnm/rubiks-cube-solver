@@ -3,7 +3,7 @@
 #include <array>
 #include <algorithm>
 
-#include <sfml/Graphics.hpp>
+#include <SFML/Graphics.hpp>
 
 #include "RenderCube.hpp"
 #include "Cube.hpp"

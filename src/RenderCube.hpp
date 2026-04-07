@@ -3,7 +3,7 @@
 #include <array>
 #include <cassert>
 
-#include <sfml/Graphics.hpp>
+#include <SFML/Graphics.hpp>
 
 constexpr int numSides{ 3 };
 

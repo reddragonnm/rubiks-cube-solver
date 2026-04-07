@@ -8,7 +8,7 @@
 
 #include "RenderCube.hpp"
 
-#include <sfml/Graphics.hpp>
+#include <SFML/Graphics.hpp>
 
 
 // forward declarations
